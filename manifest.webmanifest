@@ -1,6 +1,6 @@
 {
   "name": "Alkohol Rechner",
-  "short_name": "Alkohol",
+  "short_name": "Alkohol Rechner",
   "description": "Trag deine Getränke ein und sieh, wie viel Promille du ungefähr hast und wie nah du an deinem Limit bist.",
   "lang": "de",
   "start_url": "./",
