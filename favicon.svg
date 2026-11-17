@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
 <defs>
   <clipPath id="rr"><rect width="512" height="512" rx="116"/></clipPath>
-  <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0F2019"/><stop offset="1" stop-color="#040907"/></linearGradient>
-  <radialGradient id="a" cx=".1" cy=".05" r=".8"><stop offset="0" stop-color="#FFB020" stop-opacity=".9"/><stop offset="1" stop-color="#FFB020" stop-opacity="0"/></radialGradient>
-  <radialGradient id="o" cx=".08" cy=".98" r=".7"><stop offset="0" stop-color="#FF6A2B" stop-opacity=".75"/><stop offset="1" stop-color="#FF6A2B" stop-opacity="0"/></radialGradient>
-  <radialGradient id="l" cx=".98" cy=".6" r=".6"><stop offset="0" stop-color="#B6F23C" stop-opacity=".6"/><stop offset="1" stop-color="#B6F23C" stop-opacity="0"/></radialGradient>
-  <linearGradient id="liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD257"/><stop offset=".55" stop-color="#F2A20C"/><stop offset="1" stop-color="#D97F06"/></linearGradient>
+  <linearGradient id="base" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111A3A"/><stop offset="1" stop-color="#04060F"/></linearGradient>
+  <radialGradient id="a" cx=".1" cy=".05" r=".8"><stop offset="0" stop-color="#3A56C8" stop-opacity=".8"/><stop offset="1" stop-color="#3A56C8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="o" cx=".08" cy=".98" r=".7"><stop offset="0" stop-color="#F5C451" stop-opacity=".75"/><stop offset="1" stop-color="#F5C451" stop-opacity="0"/></radialGradient>
+  <radialGradient id="l" cx=".98" cy=".6" r=".6"><stop offset="0" stop-color="#7FD4FF" stop-opacity=".6"/><stop offset="1" stop-color="#7FD4FF" stop-opacity="0"/></radialGradient>
+  <linearGradient id="liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset=".55" stop-color="#E9B63E"/><stop offset="1" stop-color="#C8922A"/></linearGradient>
   <clipPath id="mug"><path d="M150 176H330V356A26 26 0 0 1 304 382H176A26 26 0 0 1 150 356Z"/></clipPath>
 </defs>
 <g clip-path="url(#rr)"><rect width="512" height="512" fill="url(#base)"/><rect width="512" height="512" fill="url(#a)"/><rect width="512" height="512" fill="url(#o)"/><rect width="512" height="512" fill="url(#l)"/></g>
 <g transform="translate(256 256) scale(1) translate(-256 -256) translate(-10 -14)">
-  <ellipse cx="240" cy="410" rx="116" ry="15" fill="#FFB020" opacity=".35"/>
-  <path d="M150 176H330V356A26 26 0 0 1 304 382H176A26 26 0 0 1 150 356Z" fill="#12231C"/>
+  <ellipse cx="240" cy="410" rx="116" ry="15" fill="#F5C451" opacity=".35"/>
+  <path d="M150 176H330V356A26 26 0 0 1 304 382H176A26 26 0 0 1 150 356Z" fill="#121A38"/>
   <g clip-path="url(#mug)"><rect x="140" y="214" width="200" height="180" fill="url(#liq)"/><circle cx="196" cy="300" r="8" fill="#FFE9B0" opacity=".7"/><circle cx="262" cy="336" r="6" fill="#FFE9B0" opacity=".7"/><circle cx="286" cy="268" r="5" fill="#FFE9B0" opacity=".7"/></g>
-  <path d="M330 218h18a40 40 0 0 1 40 40v38a40 40 0 0 1-40 40h-18" fill="none" stroke="#F3FBF2" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M150 176H330V356A26 26 0 0 1 304 382H176A26 26 0 0 1 150 356Z" fill="none" stroke="#F3FBF2" stroke-width="15" stroke-linejoin="round"/>
-  <path d="M138 196c-20-6-28-30-14-46 8-10 22-13 33-8 6-20 26-32 47-28 12 2 22 9 28 19 10-12 27-17 42-12 14 4 24 15 27 28 14-3 29 4 35 17 7 15 0 32-15 39-8 4-17 3-25-1-9 12-26 16-40 9-8 10-22 14-35 9-9 9-24 11-36 4-15 8-34 4-47-30Z" fill="#FFF6DC" stroke="#F3FBF2" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M330 218h18a40 40 0 0 1 40 40v38a40 40 0 0 1-40 40h-18" fill="none" stroke="#F4F6FF" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M150 176H330V356A26 26 0 0 1 304 382H176A26 26 0 0 1 150 356Z" fill="none" stroke="#F4F6FF" stroke-width="15" stroke-linejoin="round"/>
+  <path d="M138 196c-20-6-28-30-14-46 8-10 22-13 33-8 6-20 26-32 47-28 12 2 22 9 28 19 10-12 27-17 42-12 14 4 24 15 27 28 14-3 29 4 35 17 7 15 0 32-15 39-8 4-17 3-25-1-9 12-26 16-40 9-8 10-22 14-35 9-9 9-24 11-36 4-15 8-34 4-47-30Z" fill="#FFF6DC" stroke="#F4F6FF" stroke-width="6" stroke-linejoin="round"/>
   <path d="M180 240V320" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity=".35"/>
-  <circle cx="392" cy="140" r="9" fill="#B6F23C"/><circle cx="110" cy="250" r="6" fill="#FFB020"/><circle cx="410" cy="196" r="6" fill="#FFE39A"/>
+  <circle cx="392" cy="140" r="9" fill="#7FD4FF"/><circle cx="110" cy="250" r="6" fill="#F5C451"/><circle cx="410" cy="196" r="6" fill="#FFE39A"/>
 </g>
 </svg>

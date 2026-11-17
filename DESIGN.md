@@ -3,7 +3,7 @@
 Schwesterprojekt des Koffein Rechners: gleicher Aufbau, andere Farben, andere Getränke, andere Haltung.
 
 ## Charakter
-Eine gute Bar bei Nacht: dunkles Flaschengrün, Bernstein-Glow, harte Limetten-Schatten. Der Held der Seite ist der **Krug**, der sich füllt, je näher du deinem eigenen Limit kommst.
+Eine Cocktailbar um Mitternacht: tiefes Nachtblau, Gold wie Sekt im Glas, Eisblau als Kontrast. Der Held der Seite ist der **Krug**, der sich füllt, je näher du deinem eigenen Limit kommst.
 
 ## Haltung
 - Die App soll helfen, das eigene Limit zu kennen. Sie belohnt nie mehr Trinken.
@@ -12,8 +12,11 @@ Eine gute Bar bei Nacht: dunkles Flaschengrün, Bernstein-Glow, harte Limetten-S
 - Die Rangliste sortiert nach „im Limit geblieben“, dann nach wenig Alkohol. Mehr trinken bringt nach unten.
 - Überall steht dabei: Schätzung, kein Messwert, keine Freigabe zum Fahren.
 
-## Palette „Flaschengrün & Bernstein“
-Bühne `#060D0A`, Bernstein `#FFB020` (Hauptaktion), Spritz-Orange `#FF6A2B` (Glow), Schaum-Creme `#FFE39A` (Highlights), ein Kontrast: Limette `#B6F23C` (Schlagschatten, Links, Erfolg). Rot `#FF3355` nur für „über dem Limit“ und Fehler. Kein Violett. Tokens stehen in `:root` in `style.css`.
+## Palette „Mitternacht & Gold“
+Bühne `#070B1A`, Gold `#F5C451` (Hauptaktion), warmes Gold `#E89A3C` (Glow), Creme `#FFE9A8` (Highlights), ein Kontrast: Eisblau `#7FD4FF` (Schlagschatten, Links, Erfolg). Rot `#FF4D6A` nur für „über dem Limit“ und Fehler. Kein Violett. Tokens stehen in `:root` in `style.css`.
+
+## Hintergrund
+Ruhige Nacht: ein sanfter blauer Lichtschein von oben, ein Hauch Gold von unten, darin viele feine aufsteigende Bläschen (26 auf dem Handy, 54 am PC). Keine Farbwolken, keine Punkte, kein Wasser-Effekt. Bei „weniger Bewegung“ stehen die Bläschen still. Die Farbwolken gibt es nur noch im Party-Modus.
 
 Schrift, Abstände, Eckenradius, Icons, CSP und Zustände wie im Koffein Rechner (Bricolage Grotesque, Skala 4–72 px, Radius 16 px, SVG-Sprite, kein Inline-Style/-Script).
 

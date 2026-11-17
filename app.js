@@ -65,12 +65,13 @@ function toast(text, kind) {
 /* ---------- Hintergrund: aufsteigende Bläschen ---------- */
 (function floaters() {
   const bg = $('bg');
-  for (let i = 0; i < 16; i++) {
-    const b = h('i', { class: 'fb' });
+  // Viele feine Bläschen: kleine steigen schneller, jede schwankt leicht. Auf dem Handy weniger, damit nichts ruckelt.
+  for (let i = 0; i < (LITE ? 26 : 54); i++) {
+    const b = h('i', { class: 'fb' }), w = 3 + Math.pow(Math.random(), 2) * 11;
     b.style.left = (Math.random() * 100).toFixed(1) + '%';
-    b.style.setProperty('--t', (16 + Math.random() * 16).toFixed(1) + 's'); b.style.setProperty('--d', (-Math.random() * 30).toFixed(1) + 's');
-    b.style.setProperty('--sx', (Math.random() * 160 - 80).toFixed(0) + 'px'); b.style.setProperty('--rot', (Math.random() * 720 - 360).toFixed(0) + 'deg');
-    b.style.setProperty('--sz', (0.6 + Math.random() * 1.1).toFixed(2));
+    b.style.setProperty('--w', w.toFixed(1) + 'px'); b.style.setProperty('--o', (0.25 + Math.random() * 0.5).toFixed(2));
+    b.style.setProperty('--t', (9 + w * 0.9 + Math.random() * 8).toFixed(1) + 's'); b.style.setProperty('--d', (-Math.random() * 30).toFixed(1) + 's');
+    b.style.setProperty('--sx', (Math.random() * 28 - 14).toFixed(0) + 'px'); b.style.setProperty('--y', (Math.random() * 100).toFixed(0) + '%');
     bg.insertBefore(b, bg.querySelector('.grain'));
   }
 })();
