@@ -520,3 +520,4 @@ html.reduce #bg .fb{animation:none;opacity:var(--o,.5);bottom:var(--y,50%)}
 .cup-svg .steam path{stroke:var(--liq2,var(--honey))}
 .cup.swap{animation:pop .6s var(--spring)}
 @media (max-width:420px){.toast-seg button{font-size:.82rem;padding-inline:2px}}
+.cup-svg .dimples{fill:rgba(255,255,255,.07);stroke:rgba(255,255,255,.42);stroke-width:2}

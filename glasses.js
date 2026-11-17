@@ -1,12 +1,14 @@
 'use strict';
 /* Gläser für den Becher auf der Startseite. Gezeigt wird das Glas des zuletzt getrunkenen Getränks, ohne Getränk eine Halbe.
    Jedes Glas: body = Innenraum (darin steht die Flüssigkeit), top/bottom = Höhe von Rand und Boden,
-   extra = Stiel, Fuß, Henkel oder dicker Boden (nur Linie), shine = Lichtreflex. Koordinaten im viewBox "0 -34 210 244". */
+   extra = Stiel, Fuß, Henkel oder dicker Boden (nur Linie), deco = Noppen, shine = Lichtreflex. Koordinaten im viewBox "0 -34 210 244". */
+const DIMPLES = (pts) => pts.map(([x, y]) => `M${x - 9} ${y}a9 12 0 1 0 18 0a9 12 0 1 0 -18 0`).join('');
 const FOOT = (y) => `M58 ${y}a42 7 0 1 0 84 0a42 7 0 1 0 -84 0`;
 const GLASSES = {
-  halbe: { // Willibecher, das klassische Halbe-Glas
-    body: 'M48 10C47 30 42 48 44 62C46 96 62 128 66 158Q67 166 75 166H125Q133 166 134 158C138 128 154 96 156 62C158 48 153 30 152 10Z',
-    top: 10, bottom: 166, extra: 'M68 166Q70 173 79 173H121Q130 173 132 166', shine: 'M60 40C58 70 66 110 74 140' },
+  halbe: { // Halbe: Glaskrug mit Henkel und Noppen, wie im Biergarten
+    body: 'M50 26H150V150A16 16 0 0 1 134 166H66A16 16 0 0 1 50 150Z',
+    top: 26, bottom: 166, extra: 'M150 50h9a24 24 0 0 1 24 24v28a24 24 0 0 1-24 24h-9M54 166Q56 173 65 173H135Q144 173 146 166', shine: 'M60 44V92',
+    deco: DIMPLES([[70, 50], [100, 50], [130, 50], [85, 80], [115, 80], [70, 110], [100, 110], [130, 110], [85, 140], [115, 140]]) },
   mass: { // Maßkrug
     body: 'M36 12H160V150A16 16 0 0 1 144 166H52A16 16 0 0 1 36 150Z',
     top: 12, bottom: 166, extra: 'M160 42h10a26 26 0 0 1 26 26v34a26 26 0 0 1-26 26h-10', shine: 'M54 36V140M72 36V140' },
@@ -51,7 +53,7 @@ const GLASSES = {
 const GLASS_OF = (() => {
   const m = {}, put = (g, names) => names.split(',').forEach((n) => { m[n.trim().toLowerCase()] = g; });
   put('halbe', 'Helles,Export,Schwarzbier,Radler,Alkoholfreies Bier,Colabier,Biermischgetränk');
-  put('mass', 'Festbier,Kellerbier'); put('weizen', 'Weizenbier'); put('tulpe', 'Pils,Bockbier'); put('stange', 'Kölsch,Altbier,Mexikanisches Lager');
+  put('halbe', 'Kellerbier'); put('mass', 'Festbier'); put('weizen', 'Weizenbier'); put('tulpe', 'Pils,Bockbier'); put('stange', 'Kölsch,Altbier,Mexikanisches Lager');
   put('pint', 'Pale Ale,IPA,Stout,Cider,Apfelwein'); put('rot', 'Rotwein,Sangria,Berliner Weiße,Aperol Spritz,Hugo,Limoncello Spritz,Wild Berry Spritz');
   put('wein', 'Weißwein,Rosé,Weinschorle,Federweißer,Lambrusco,Met,Wermut,Sherry,Portwein'); put('flute', 'Sekt,Prosecco,Champagner,Mimosa,Bellini');
   put('tasse', 'Glühwein,Feuerzangenbowle'); put('shot', 'Sake');

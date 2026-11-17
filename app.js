@@ -91,6 +91,7 @@ function cupEl(spec = DEFAULT_GLASS()) {
     <path class="body-fill" d="${G.body}"/>
     <g clip-path="url(#${id})"><g class="liquid"><g class="wave w2"><path d="${wave}"/></g><g class="wave w1"><path d="${wave}" transform="translate(0 ${spec.foam ? 12 : 7})"/></g>${ice}</g></g>
     ${spec.straw ? `<path class="straw" d="M128 ${y0 - 30}L112 ${G.bottom - 24}"/>` : ''}
+    ${G.deco ? `<path class="dimples" d="${G.deco}"/>` : ''}
     <path class="outline" d="${G.body}"/>
     <path class="extra" d="${G.extra}"/>
     <path class="shine" d="${G.shine}"/>
