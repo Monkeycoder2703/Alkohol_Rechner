@@ -1,11 +1,11 @@
 'use strict';
-/* Alkohol Rechner – Logik. $, t(), REDUCED kommen aus i18n.js, der Party-Modus aus chaos.js. */
+/* Alkohol Rechner – Logik. $, t(), REDUCED kommen aus i18n.js, die Flüssigkeit aus liquid.js. */
 const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY,
   { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const state = { mode: 'login', period: 'day', drinks: [], mixers: [], kind: 'beer', selected: null, recent: [], rows: null, bac: 0, username: '', cupReady: false,
-  loggedIn: false, tab: 'dash', warned: false, amount: null, custom: false, mixer: null, mixAmt: 200, mixCustom: false, body: { weight: null, sex: null, limit: 0.5 } };
+  loggedIn: false, tab: 'dash', amount: null, custom: false, mixer: null, mixAmt: 200, mixCustom: false, body: { weight: null, sex: null, limit: 0.5 } };
 const recovery = location.hash.includes('type=recovery'); // Link aus der "Passwort vergessen"-Mail
 const locale = () => (LANG === 'en' ? 'en-GB' : 'de-DE');
 
@@ -118,11 +118,11 @@ function showAuth(name) {
 }
 function show(loggedIn, name) {
   state.loggedIn = loggedIn;
-  $('auth-view').hidden = loggedIn; $('app-view').hidden = !loggedIn; $('userbox').hidden = !loggedIn; $('chaos').hidden = !loggedIn;
+  $('auth-view').hidden = loggedIn; $('app-view').hidden = !loggedIn; $('userbox').hidden = !loggedIn;
   $('who').textContent = name || ''; $('who2').textContent = name || '';
   document.body.classList.remove('booting');
-  if (!loggedIn) { Chaos.stop(); setChaosUI(); Liquid.set(0, false); }
-  if (loggedIn) { requestAnimationFrame(moveAll); Chaos.preload(); }
+  if (!loggedIn) Liquid.set(0, false);
+  if (loggedIn) requestAnimationFrame(moveAll);
 }
 async function enter(user) {
   const p = ok(await sb.from('profiles').select('username,weight_kg,sex,limit_pm').eq('id', user.id).single());
@@ -145,6 +145,7 @@ document.querySelectorAll('#main-tabs [role="tab"]').forEach((b) => b.onclick = 
   select($('main-tabs'), b); state.tab = b.dataset.tab;
   document.querySelectorAll('.tab').forEach((x) => x.hidden = x.id !== 'tab-' + b.dataset.tab);
   moveAll(); if (b.dataset.tab === 'board') loadBoard();
+  if (b.dataset.tab === 'toasts') { renderToasts(); if (!tst.last) randomToast(); }
 });
 document.querySelectorAll('#seg [role="tab"]').forEach((b) => b.onclick = () => { state.period = b.dataset.p; select($('seg'), b); loadBoard(); });
 
@@ -157,10 +158,9 @@ function applyAuthMode() {
   $('p').autocomplete = reg ? 'new-password' : 'current-password';
 }
 function rerender() {
-  applyAuthMode(); applyStatic(); setChaosUI();
+  applyAuthMode(); applyStatic();
   document.querySelectorAll('[data-toggle-pw]').forEach((b) => { const shown = $(b.dataset.togglePw).type === 'text'; b.setAttribute('aria-label', t(shown ? 'hide_pw' : 'show_pw')); });
-  if (state.loggedIn) { renderBody(); renderKinds(); renderDrinks(); renderDash(); if (state.tab === 'board' && state.rows) renderBoard(state.rows); requestAnimationFrame(moveAll); }
-  Chaos.relabel();
+  if (state.loggedIn) { renderBody(); renderKinds(); renderDrinks(); renderDash(); if (state.tab === 'board' && state.rows) renderBoard(state.rows); if (state.tab === 'toasts') { renderToasts(); randomToast(); } requestAnimationFrame(moveAll); }
 }
 $('lang').onclick = () => { LANG = LANG === 'de' ? 'en' : 'de'; try { localStorage.setItem('ar-lang', LANG); } catch {} rerender(); };
 
@@ -594,26 +594,39 @@ async function playLoader() {
   L.classList.remove('on'); L.setAttribute('aria-hidden', 'true'); await sleep(REDUCED ? 0 : 450);
 }
 
-/* ---------- Party-Modus: immer frei schaltbar, hängt nicht davon ab, wie viel getrunken wurde ---------- */
-function setChaosUI() {
-  const b = $('chaos'), active = Chaos.on;
-  b.setAttribute('aria-pressed', String(active));
-  $('chaos-t').dataset.i18n = active ? 'chaos_stop' : 'chaos_btn'; $('chaos-t').textContent = t(active ? 'chaos_stop' : 'chaos_btn');
-  b.title = t('chaos_aria'); b.setAttribute('aria-label', b.title);
+/* ---------- Trinksprüche ---------- */
+const tst = { cat: 'classic', last: '' };
+function toastPool() { // für den Zufallsknopf: alle eigenen Sprüche der Sprache
+  const T = TOASTS[LANG]; return [...T.classic.map((x) => ['classic', x]), ...T.funny.map((x) => ['funny', x]), ...T.calm.map((x) => ['calm', x])];
 }
-function activateChaos() {
-  Chaos.start(); setChaosUI(); if (REDUCED) toast(t('chaos_reduced'));
-  const r = $('chaos').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, 'PARTY!');
+function showToast(cat, text, sub) {
+  $('tc-cat').textContent = t('tc_' + cat); const q = $('tc-text'); q.replaceChildren(h('span', { text })); if (sub) q.append(h('small', { text: sub }));
+  tst.last = text + (sub ? ' (' + sub + ')' : ''); q.classList.remove('in'); void q.offsetWidth; q.classList.add('in');
 }
-$('chaos').onclick = () => {
-  if (Chaos.on) { Chaos.stop(); setChaosUI(); return; }
-  if (!state.warned) { $('chaos-dialog').showModal(); return; }
-  activateChaos();
-};
-$('chaos-cancel').onclick = () => $('chaos-dialog').close();
-$('chaos-go').onclick = () => { state.warned = true; $('chaos-dialog').close(); activateChaos(); };
-$('mute').onclick = () => Chaos.toggleMute();
-$('skip').onclick = () => Chaos.skip();
+function randomToast() {
+  const pool = toastPool(); let pick; do { pick = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && pick[1] === tst.last);
+  showToast(pick[0], pick[1]);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast(t('toasts_copied')); }
+  catch { toast(t('toasts_copy_fail'), 'err'); }
+}
+function renderToasts() {
+  const ul = $('toast-list'); ul.replaceChildren();
+  const items = tst.cat === 'world'
+    ? CHEERS.map((c) => ({ main: c[0], sub: [LANG === 'de' ? c[2] : c[3], c[1] && LANG === 'de' ? t('toasts_say', { p: c[1] }) : ''].filter(Boolean).join(' · ') }))
+    : TOASTS[LANG][tst.cat].map((x) => ({ main: x, sub: '' }));
+  items.forEach((it, i) => {
+    const cp = h('button', { class: 'icon-btn', type: 'button', 'aria-label': t('toasts_copy'), title: t('toasts_copy') }, ico('copy'));
+    cp.onclick = () => copyText(it.main);
+    const li = h('li', {}, h('span', { class: 'tx' }, h('b', { text: it.main }), it.sub ? h('small', { text: it.sub }) : null), cp);
+    li.style.setProperty('--i', i); li.onclick = (e) => { if (!e.target.closest('button')) showToast(tst.cat, it.main, it.sub); };
+    ul.append(li);
+  });
+}
+document.querySelectorAll('#tseg [role="tab"]').forEach((b) => b.onclick = () => { tst.cat = b.dataset.c; select($('tseg'), b); renderToasts(); });
+$('tc-next').onclick = randomToast;
+$('tc-copy').onclick = () => { if (tst.last) copyText(tst.last); };
 
 /* ---------- Rangliste: wer hält am besten Maß? Oben steht, wer im eigenen Limit bleibt und am wenigsten trinkt. ---------- */
 async function loadBoard() {
@@ -688,8 +701,6 @@ applyAuthMode(); applyStatic(); mountCup($('hero-cup')); renderSelection();
 })();
 setTimeout(() => document.body.classList.remove('booting'), 6000);
 
-// Esc beendet den Party-Modus sofort (der Dialog schließt sich bei Esc ohnehin selbst)
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && Chaos.on) { Chaos.stop(); setChaosUI(); } });
 // iPhone: Bewegungssensor braucht eine Erlaubnis, deshalb gibt es dort einen Knopf
 (() => {
   if (!Liquid.needsAsk) return; $('tilt-box').hidden = false;

@@ -34,7 +34,6 @@ small,.hint{color:var(--mute);font-size:.875rem}
 /* ---------- Hintergrund: Aurora (immer an) ---------- */
 #bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
 #bg .dots{position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(170,190,240,.16) 1px,transparent 0);background-size:var(--s4) var(--s4)}
-#bg .blob{position:absolute;width:64vmax;height:64vmax;border-radius:50%;mix-blend-mode:screen;will-change:transform;animation:drift 26s ease-in-out infinite alternate}
 #bg .b1{left:-20vmax;top:-26vmax;opacity:.62;background:radial-gradient(circle,var(--accent) 0,transparent 66%)}
 #bg .b2{right:-26vmax;top:4vmax;opacity:.36;background:radial-gradient(circle,var(--volt) 0,transparent 62%);animation-duration:33s;animation-delay:-8s}
 #bg .b3{left:-12vmax;bottom:-34vmax;opacity:.5;background:radial-gradient(circle,var(--spritz) 0,transparent 64%);animation-duration:29s;animation-delay:-14s}
@@ -42,7 +41,6 @@ small,.hint{color:var(--mute);font-size:.875rem}
 #bg .grain{position:absolute;inset:0;opacity:.10;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.85%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url%28%23n%29%27/%3E%3C/svg%3E");background-size:160px 160px}
 #bg .fb{position:absolute;bottom:-40px;width:12px;height:12px;border-radius:50%;background:transparent;border:2px solid var(--coffee-2);opacity:0;transform:scale(var(--sz,1));animation:floatUp var(--t,22s) linear var(--d,0s) infinite}
 #bg .fb:nth-child(3n){border-color:var(--accent)}#bg .fb:nth-child(3n+1){border-color:var(--volt);width:8px;height:8px}
-#bg .strobe,#bg .scan{position:absolute;inset:0;display:none}
 @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(12vmax,9vmax) scale(1.22)}}
 @keyframes floatUp{0%{transform:translate(0,0) rotate(0) scale(var(--sz,1));opacity:0}10%{opacity:.5}90%{opacity:.5}100%{transform:translate(var(--sx,40px),-115vh) rotate(var(--rot,360deg)) scale(var(--sz,1));opacity:0}}
 
@@ -61,15 +59,7 @@ small,.hint{color:var(--mute);font-size:.875rem}
 .tools{display:flex;align-items:center;gap:var(--s2)}
 .lang-btn{width:auto;min-width:48px;padding:0 var(--s2);font-weight:800;letter-spacing:.04em;border:1.5px solid var(--line);color:var(--ink)}
 .lang-btn:hover{border-color:var(--volt);color:var(--volt)}
-.chaos-btn{position:relative;display:inline-flex;align-items:center;gap:var(--s2);min-height:44px;padding:0 var(--s3);border:1.5px dashed var(--mute);border-radius:var(--r);
   background:transparent;color:var(--mute);font-weight:800;letter-spacing:.1em;cursor:pointer;overflow:hidden;transition:transform .25s var(--spring),background .3s,color .3s,border-color .3s}
-.chaos-btn:hover{transform:translateY(-2px)}
-.chaos-btn .unlock-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;transform:scaleX(var(--p,0));background:var(--honey);transition:transform .9s var(--ease)}
-.chaos-btn[data-locked="false"]{border:1.5px solid var(--honey);color:var(--honey)}
-.chaos-btn[data-locked="false"] .lockico,.chaos-btn[data-locked="false"] .unlock-bar{display:none}
-.chaos-btn[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);animation:none}
-.chaos-btn.nope{animation:shake .5s var(--ease)}
-.chaos-btn.unlock-pop{animation:pop .7s var(--spring),ready 2s .7s ease-in-out infinite}
 @keyframes ready{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 22px 0 rgba(255,227,154,.7)}}
 
 /* ---------- Boot ---------- */
@@ -320,7 +310,6 @@ dialog .row{display:flex;gap:var(--s3);justify-content:flex-end;flex-wrap:wrap}
   .drinks{grid-template-columns:repeat(2,1fr)}
   .chip{display:none}
   .brand{font-size:1rem;gap:var(--s2)}.brand-mark{width:36px;height:36px}
-  .chaos-btn span{display:none}.chaos-btn{padding:0 var(--s3)}
   .top{padding-inline:var(--s3)}
   .tools{gap:var(--s1);min-width:0}
   #userbox .who,#who{max-width:22vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -409,92 +398,11 @@ dialog .row{display:flex;gap:var(--s3);justify-content:flex-end;flex-wrap:wrap}
 .log .amt{font-weight:500;color:var(--mute);font-size:.88rem}
 @media (max-width:900px){.size-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-/* ================= CHAOS MODE ================= */
-@property --h{syntax:"<number>";inherits:true;initial-value:0}
-html.chaos{--bg:#02030A;--surface:#080C1C;--ink:#FFFFFF;--mute:#E6ECFF;--line:hsl(var(--h) 100% 42%);
-  --accent:hsl(var(--h) 100% 58%);--spritz:hsl(calc(var(--h) + 60) 100% 60%);--volt:hsl(calc(var(--h) + 180) 100% 55%);--honey:hsl(calc(var(--h) + 110) 100% 58%);
-  --coffee:hsl(calc(var(--h) + 20) 100% 50%);--coffee-2:hsl(calc(var(--h) + 80) 100% 60%);--porcelain:#0B1026;--danger:hsl(calc(var(--h) + 300) 100% 60%);
-  --beat:.4s;animation:hue 2.4s linear infinite}
-@keyframes hue{to{--h:360}}
-html.chaos #bg .blob{opacity:.95;animation-duration:3s}
-html.chaos #bg .grain{opacity:.2}
-html.chaos #bg .fb{animation-duration:3s}
-html.chaos #bg .strobe,html.chaos #bg .scan{display:block}
-#bg .strobe{opacity:0;mix-blend-mode:screen}
-#bg .s1{background:var(--accent);animation:beat calc(var(--beat)*2) ease-out infinite}
-#bg .s2{background:var(--volt);animation:beat calc(var(--beat)*2) ease-out calc(var(--beat)*-1) infinite}
-#bg .scan{background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 2px,transparent 2px 4px);opacity:.5}
-@keyframes beat{0%{opacity:.34}55%{opacity:0}100%{opacity:0}}
-html.chaos .panel,html.chaos .drink,html.chaos .size-opt,html.chaos .tabs,html.chaos .chip,html.chaos dialog{border-color:var(--accent);box-shadow:0 0 14px var(--accent),0 0 38px var(--spritz)}
-html.chaos .panel,html.chaos .drink,html.chaos .size-opt,html.chaos .tabs{-webkit-backdrop-filter:none;backdrop-filter:none;background-color:rgba(6,9,22,.86)}
-@keyframes neon{from{box-shadow:0 0 8px var(--accent),0 0 24px var(--spritz),inset 0 0 8px rgba(255,255,255,.06)}to{box-shadow:0 0 22px var(--volt),0 0 60px var(--accent),inset 0 0 18px rgba(255,255,255,.1)}}
-html.chaos .sec-h h2,html.chaos .panel h2{background:none;-webkit-text-fill-color:currentColor}
-html.chaos .display,html.chaos .big,html.chaos .sec-h h2,html.chaos .panel h2{animation:glitch .8s steps(1) infinite}
-@keyframes glitch{0%{text-shadow:3px 0 var(--spritz),-3px 0 var(--volt)}12%{text-shadow:-5px 2px var(--spritz),5px -2px var(--volt)}24%{text-shadow:2px -3px var(--honey),-2px 3px var(--accent)}40%{text-shadow:4px 0 var(--volt),-4px 0 var(--spritz)}62%{text-shadow:-3px -2px var(--accent),3px 2px var(--honey)}80%{text-shadow:6px 0 var(--spritz),-6px 0 var(--volt)}100%{text-shadow:3px 0 var(--spritz),-3px 0 var(--volt)}}
-html.chaos .cup,html.chaos .hero-cup{filter:drop-shadow(0 0 30px var(--accent)) drop-shadow(0 0 70px var(--spritz));animation:cupDance var(--beat) ease-in-out infinite alternate}
-@keyframes cupDance{from{transform:rotate(-5deg) scale(1)}to{transform:rotate(5deg) scale(1.07)}}
-html.chaos .brand-mark{animation:spin 1.2s linear infinite}
-html.chaos .btn:not(.ghost):not(.danger){background:linear-gradient(90deg,var(--accent),var(--honey),var(--volt),var(--spritz),var(--accent));background-size:300% 100%;animation:slide 1.2s linear infinite}
-@keyframes slide{to{background-position:-300% 0}}
-html.chaos body{padding-bottom:36px}
-html.chaos .track i{animation:slide 1.6s linear infinite;background-image:linear-gradient(90deg,var(--accent),var(--honey),var(--volt),var(--accent));background-size:300% 100%}
-.bolt{position:fixed;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 14px var(--honey)) drop-shadow(0 0 40px var(--accent)) drop-shadow(0 0 90px var(--spritz));opacity:0;mix-blend-mode:screen;animation:bolt .6s ease-out forwards}
-.bolt polyline{fill:none;stroke-linejoin:miter;stroke-linecap:round;vector-effect:non-scaling-stroke}
-.bolt .glow{stroke:var(--honey);stroke-width:16}
-.bolt .core{stroke:#fff;stroke-width:6}
-.bolt .fork.glow{stroke-width:9}.bolt .fork.core{stroke-width:3}
-@keyframes bolt{0%{opacity:0;transform:scale(.96)}10%{opacity:1;transform:scale(1)}100%{opacity:0}}
-.bean.rain{top:-30px;box-shadow:0 0 14px var(--accent);animation:fall var(--t,2.6s) linear forwards;transform:scale(var(--sz,1))}
-@keyframes fall{to{transform:translateY(112vh) rotate(var(--rot,540deg)) scale(var(--sz,1))}}
-.ticker{position:fixed;left:0;right:0;bottom:0;height:36px;z-index:40;overflow:hidden;display:none;align-items:center;background:var(--accent);color:var(--accent-ink);font-weight:800;letter-spacing:.14em;font-size:.85rem}
-html.chaos .ticker{display:flex}
-.tk{white-space:nowrap;display:inline-block;animation:marquee 26s linear infinite}
-@keyframes marquee{to{transform:translateX(-50%)}}
-#player{position:fixed;left:var(--s3);bottom:52px;z-index:45;display:none;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2) var(--s1) var(--s3);max-width:calc(100% - 2*var(--s3));
-  background:var(--surface);border:1.5px solid var(--accent);border-radius:var(--r);box-shadow:4px 4px 0 var(--volt)}
-html.chaos #player:not([hidden]){display:flex}
-#player .np{font-weight:700;font-size:.85rem;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* Rave-Elemente (werden von chaos.js erzeugt) */
-.laser{position:fixed;top:-10vh;width:5px;height:140vh;transform-origin:50% 0;pointer-events:none;mix-blend-mode:screen;opacity:.85;
-  background:linear-gradient(to bottom,var(--c,var(--accent)),transparent 85%);will-change:transform;
-  animation:sweep var(--d,1.6s) ease-in-out var(--dl,0s) infinite alternate}
-@keyframes sweep{from{transform:rotate(calc(var(--a,-35deg)*-1))}to{transform:rotate(var(--a,35deg))}}
-.spot{position:fixed;width:46vmax;height:46vmax;border-radius:50%;pointer-events:none;mix-blend-mode:screen;opacity:.5;left:var(--x);top:var(--y);translate:-50% -50%;
-  background:radial-gradient(circle,var(--c,var(--accent)),transparent 62%);will-change:transform;animation:roam var(--d,3s) ease-in-out infinite alternate}
-@keyframes roam{from{transform:translate(-18vw,-10vh) scale(.8)}to{transform:translate(18vw,10vh) scale(1.2)}}
-.disco{position:fixed;top:-26px;left:50%;translate:-50% 0;width:84px;height:84px;border-radius:50%;pointer-events:none;
-  background:conic-gradient(from 0deg,#fff,#999,#fff,#bbb,#fff,#888,#fff,#aaa,#fff);box-shadow:0 0 40px var(--accent),0 0 90px var(--spritz);animation:spin 1.6s linear infinite}
-.disco::before{content:"";position:absolute;left:50%;top:-40vh;width:2px;height:40vh;background:#888}
-#eq{position:fixed;left:0;right:0;bottom:36px;height:64px;display:none;align-items:flex-end;justify-content:center;gap:4px;pointer-events:none;z-index:39}
-html.chaos #eq{display:flex}
-#eq i{width:min(2.4vw,18px);height:100%;border-radius:3px 3px 0 0;background:linear-gradient(to top,var(--accent),var(--honey));transform-origin:bottom;will-change:transform;animation:eq var(--beat) ease-in-out var(--dl,0s) infinite alternate}
-@keyframes eq{from{transform:scaleY(.12)}to{transform:scaleY(var(--m,1))}}
-.confetti{position:absolute;top:-16px;width:9px;height:14px;pointer-events:none;background:hsl(var(--hh) 100% 60%);animation:fall var(--t,2.6s) linear forwards}
-
-/* Show reagiert auf die Musik (Werte setzt chaos.js; ohne Analyse laufen die Takt-Animationen oben weiter) */
-html.react #bg .s1{animation:none;opacity:calc(var(--f1,0)*.36)}
-html.react #bg .s2{animation:none;opacity:calc(var(--f2,0)*.36)}
-html.react .laser{opacity:calc(.2 + var(--mid,0)*.8);scale:calc(1 + var(--bass,0)*2.2) 1}
-html.react .spot{opacity:calc(.18 + var(--bass,0)*.6);scale:calc(.8 + var(--bass,0)*.45)}
-html.react .disco{scale:calc(1 + var(--bass,0)*.3)}
-html.react #eq i{animation:none}
-
 /* ---------- Schlanke Effekte für Handy und Tablet (html.lite) ---------- */
 html.lite *,html.lite *::before,html.lite *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 html.lite .panel,html.lite .drink,html.lite .tabs,html.lite .size-opt,html.lite dialog,html.lite .chip,html.lite .lang-btn{background-color:color-mix(in srgb,var(--surface) 88%,transparent)}
 html.lite .top{background:color-mix(in srgb,var(--bg) 94%,transparent)}
-html.lite #bg .blob{mix-blend-mode:normal;animation:none;will-change:auto}
-html.lite #bg .grain,html.lite #bg .scan{display:none!important}
-html.lite.chaos{animation-timing-function:steps(14,end)} /* Farbwechsel in Stufen: schnell, aber nur wenige Neuberechnungen pro Sekunde */
-html.lite.chaos #bg .blob{animation:none}
-html.lite.chaos .cup,html.lite.chaos .hero-cup{filter:none;animation:none}
-html.lite.chaos .display,html.lite.chaos .big,html.lite.chaos .sec-h h2,html.lite.chaos .panel h2{animation:none;text-shadow:2px 0 var(--spritz),-2px 0 var(--volt)}
-html.lite.chaos .btn:not(.ghost):not(.danger){animation:none}
-html.lite.chaos .panel,html.lite.chaos .drink,html.lite.chaos .size-opt,html.lite.chaos .tabs,html.lite.chaos .chip,html.lite.chaos dialog{box-shadow:0 0 12px var(--accent)}
-html.lite .bolt{filter:drop-shadow(0 0 16px var(--accent));mix-blend-mode:normal}
-html.lite .laser,html.lite .spot{mix-blend-mode:normal}
-html.lite .spot{opacity:.35}
+html.lite #bg .grain{display:none!important}
 
 /* "weniger Bewegung" im System (oder nicht überschrieben): Animationen aus */
 html.reduce *,html.reduce *::before,html.reduce *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;animation-delay:0s!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
@@ -504,7 +412,7 @@ html.lite .disco{width:52px;height:52px;top:-18px}
 
 /* Scrollen: dekorative Animationen pausieren (Handy) */
 html.lite .drink,html.lite .size-opt,html.lite .panel{transition-duration:.12s}
-html.lite #bg,html.lite #fx,html.lite #eq{transform:translateZ(0)}
+html.lite #bg,html.lite #fx{transform:translateZ(0)}
 
 /* Wann ist das Koffein wieder weg */
 .clear{display:flex;align-items:center;gap:var(--s3);margin-top:var(--s3);padding:var(--s3);border:1px solid var(--line);border-radius:var(--r);background:color-mix(in srgb,var(--surface) 70%,transparent)}
@@ -578,7 +486,6 @@ dialog select{width:100%}
 /* ---------- Hintergrund neu: ruhige Nacht, darin feine aufsteigende Bläschen wie in einem Glas Sekt ---------- */
 #bg{background:radial-gradient(120% 55% at 50% -12%,rgba(46,66,150,.55),transparent 62%),radial-gradient(90% 40% at 50% 112%,rgba(245,196,81,.16),transparent 70%),linear-gradient(180deg,#080D20 0%,#05081A 55%,#03050F 100%)}
 #bg .dots{display:none}
-html:not(.chaos) #bg .blob{display:none}
 #bg .grain{opacity:.06}
 #bg .fb,#bg .fb:nth-child(3n),#bg .fb:nth-child(3n+1){bottom:-24px;width:var(--w,6px);height:var(--w,6px);border:1px solid var(--honey);
   background:radial-gradient(circle at 32% 30%,rgba(255,255,255,.85) 0,rgba(255,233,168,.28) 40%,rgba(245,196,81,.10) 70%);box-shadow:0 0 8px rgba(245,196,81,.4);animation:bubbleUp var(--t,16s) linear var(--d,0s) infinite}
@@ -586,14 +493,22 @@ html:not(.chaos) #bg .blob{display:none}
 @keyframes bubbleUp{0%{transform:translate(0,0);opacity:0}8%{opacity:var(--o,.6)}25%{transform:translate(var(--sx,10px),-28vh)}50%{transform:translate(calc(var(--sx,10px)*-.6),-56vh)}75%{transform:translate(var(--sx,10px),-84vh)}92%{opacity:var(--o,.6)}100%{transform:translate(0,-112vh);opacity:0}}
 html.reduce #bg .fb{animation:none;opacity:var(--o,.5);bottom:var(--y,50%)}
 
-/* ---------- Flüssigkeit im Hintergrund: steigt mit dem Promillewert, kippt mit dem Handy ---------- */
-#bg .liq{position:absolute;left:50%;top:calc(100% - var(--fill,0)*100%);width:260vmax;height:170vmax;margin-left:-130vmax;transform:rotate(var(--tilt,0deg));transform-origin:50% 0;will-change:transform;
-  background:linear-gradient(180deg,rgba(245,196,81,.30) 0,rgba(233,170,62,.20) 30vmax,rgba(200,130,40,.14) 100%);border-top:2px solid rgba(255,233,168,.55);
-  transition:top 1.8s var(--ease),opacity .8s,background-color .8s}
-#bg .liq.empty{opacity:0}
-#bg .liq.over{border-top:3px solid var(--danger);box-shadow:0 -10px 30px -6px rgba(255,77,106,.6)}
-#bg .liq-wave{position:absolute;left:0;right:-160px;top:-13px;height:12px;opacity:.5;animation:liqWave 5s linear infinite;
-  background:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%2712%27%3E%3Cpath d=%27M0 6q40-9 80 0t80 0V12H0Z%27 fill=%27%23FFE9A8%27 fill-opacity=%27.45%27/%3E%3C/svg%3E") repeat-x;background-size:160px 12px}
-@keyframes liqWave{to{transform:translateX(-160px)}}
-html.reduce #bg .liq-wave{animation:none}
-html.chaos #bg .liq{opacity:.6}
+/* ---------- Flüssigkeit im Hintergrund (liquid.js zeichnet sie in ein Canvas) ---------- */
+#bg canvas.liq{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* ---------- Trinksprüche ---------- */
+.toast-card{display:grid;gap:var(--s3);margin-bottom:var(--s5);text-align:center}
+.toast-card .eyebrow{justify-self:center;margin:0}
+.toast-card blockquote{margin:0;min-height:4.2em;display:grid;place-items:center;font-size:1.35rem;font-weight:800;line-height:1.3;text-wrap:balance}
+.toast-card blockquote small{display:block;margin-top:var(--s2);font-size:.9rem;font-weight:600;color:var(--mute)}
+.toast-card blockquote.in{animation:pop .5s var(--spring)}
+.toast-card .row{justify-content:center;flex-wrap:wrap}
+.toast-seg{margin-bottom:var(--s4)}
+.toast-seg button{flex:1 1 0;min-width:0;padding:var(--s2) var(--s1)}
+.toast-list{display:grid;gap:var(--s2);list-style:none;padding:0;margin:0}
+.toast-list li{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) var(--s4);background:color-mix(in srgb,var(--surface) 70%,transparent);border:1px solid var(--line);border-radius:var(--r);animation:rise .4s var(--ease) both;animation-delay:calc(var(--i,0)*30ms)}
+.toast-list li .tx{flex:1;min-width:0}
+.toast-list li .tx b{display:block;font-size:1.05rem}
+.toast-list li .tx small{color:var(--mute)}
+.toast-list li .icon-btn{flex:none}
+@media (max-width:560px){#main-tabs button{font-size:.7rem}#main-tabs button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}}

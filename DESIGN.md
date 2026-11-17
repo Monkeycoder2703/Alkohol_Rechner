@@ -8,7 +8,7 @@ Eine Cocktailbar um Mitternacht: tiefes Nachtblau, Gold wie Sekt im Glas, Eisbla
 ## Haltung
 - Die App soll helfen, das eigene Limit zu kennen. Sie belohnt nie mehr Trinken.
 - Hinweise sind kurz und freundlich, kein erhobener Zeigefinger.
-- Nichts wird durch Trinken freigeschaltet. Der Party-Modus ist immer frei schaltbar.
+- Nichts wird durch Trinken freigeschaltet.
 - Die Rangliste sortiert nach „im Limit geblieben“, dann nach wenig Alkohol. Mehr trinken bringt nach unten.
 - Überall steht dabei: Schätzung, kein Messwert, keine Freigabe zum Fahren.
 
@@ -16,9 +16,9 @@ Eine Cocktailbar um Mitternacht: tiefes Nachtblau, Gold wie Sekt im Glas, Eisbla
 Bühne `#070B1A`, Gold `#F5C451` (Hauptaktion), warmes Gold `#E89A3C` (Glow), Creme `#FFE9A8` (Highlights), ein Kontrast: Eisblau `#7FD4FF` (Schlagschatten, Links, Erfolg). Rot `#FF4D6A` nur für „über dem Limit“ und Fehler. Kein Violett. Tokens stehen in `:root` in `style.css`.
 
 ## Hintergrund
-Ruhige Nacht: ein sanfter blauer Lichtschein von oben, ein Hauch Gold von unten, darin viele feine aufsteigende Bläschen (26 auf dem Handy, 54 am PC). Keine Farbwolken, keine Punkte, kein Wasser-Effekt. Bei „weniger Bewegung“ stehen die Bläschen still. Die Farbwolken gibt es nur noch im Party-Modus.
+Ruhige Nacht: ein sanfter blauer Lichtschein von oben, ein Hauch Gold von unten, darin viele feine aufsteigende Bläschen (26 auf dem Handy, 54 am PC). Keine Farbwolken, keine Punkte, kein Wasser-Effekt. Bei „weniger Bewegung“ stehen die Bläschen still. 
 
-`liquid.js`: Hinter allem steht eine goldene Flüssigkeit. Sie steigt mit dem Promillewert (am eigenen Limit 70 % der Bildschirmhöhe, darüber wird sie rot, höchstens 90 %). Kippt man das Handy, bleibt die Oberfläche waagerecht und schwappt kurz nach. Das iPhone braucht dafür eine Erlaubnis (Konto → Flüssigkeit kippen). Animationen laufen auch beim Scrollen weiter. Die Flüssigkeit besteht aus den Getränken des Tages: jede Schicht hat die Farbe ihres Getränks (Mischgetränke gemischt mit der Mixer-Farbe), unten das erste, oben das letzte. Die Dicke richtet sich nach dem Alkoholanteil. Über dem Limit bekommt die Oberfläche eine rote Kante.
+`liquid.js` zeichnet die Flüssigkeit in ein Canvas. Sie steigt mit dem Promillewert (am eigenen Limit 70 % der Bildschirmhöhe, höchstens 90 %). Das Handy ist das Glas: Dreht man es, bleibt die Oberfläche waagerecht (Winkel aus der Schwerkraft, berechnet aus beta und gamma), schwappt nach und wirft Wellen, die an den Bildschirmrändern zurücklaufen. Die Wellen sind gekoppelte Federn (Höhe und Tempo je Spalte). Dazu Lichtbänder im Wasser, eine helle Oberflächenkante und Glanzpunkte auf den Kämmen. Antippen oder die Maus über die Oberfläche ziehen macht Wellen, ein neues Getränk plätschert. Auf dem Handy 30 Bilder pro Sekunde. Das iPhone braucht für die Bewegung eine Erlaubnis (Konto → Flüssigkeit kippen). Animationen laufen auch beim Scrollen weiter. Die Flüssigkeit besteht aus den Getränken des Tages: jede Schicht hat die Farbe ihres Getränks (Mischgetränke gemischt mit der Mixer-Farbe), unten das erste, oben das letzte. Die Dicke richtet sich nach dem Alkoholanteil. Über dem Limit bekommt die Oberfläche eine rote Kante.
 
 Schrift, Abstände, Eckenradius, Icons, CSP und Zustände wie im Koffein Rechner (Bricolage Grotesque, Skala 4–72 px, Radius 16 px, SVG-Sprite, kein Inline-Style/-Script).
 
@@ -39,5 +39,6 @@ Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen im Profil
 ## Sprachen
 `i18n.js` enthält alle Texte in Deutsch und Englisch. Neue Texte immer in beiden Sprachen eintragen.
 
-## Party-Modus
-Wie der Chaos Mode im Koffein Rechner (Licht, Laser, Musik), aber ohne Freischaltung. Warn-Dialog vor dem ersten Start, Blinken unter 3 Hz, Esc beendet sofort. Musik: `music/playlist.json`, ohne Songs läuft der eingebaute Beat.
+
+## Trinksprüche
+`toasts.js`: eigene kurze Sprüche je Sprache in drei Gruppen (Klassiker, Lustig, Mit Maß) und „Prost“ in 24 Sprachen. Oben ein großer Zufallsspruch zum Kopieren. Die Sprüche sollen gute Laune machen, nie zum Mehrtrinken drängen.

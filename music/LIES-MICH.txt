@@ -1,5 +1,0 @@
-Musik für den Party-Modus
-=========================
-Ohne Songs läuft der eingebaute Beat. Eigene Songs: in einen Unterordner von "music" legen und in playlist.json eintragen:
-  { "playlists": [ { "id": "party", "name": "Party", "tracks": [ { "title": "Titel", "file": "party/song.mp3", "bpm": 128 } ] } ] }
-Bitte nur Musik hochladen, die du veröffentlichen darfst.

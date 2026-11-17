@@ -6,6 +6,8 @@ Trag deine Getränke ein und sieh, wie viel Promille du ungefähr hast und wie n
 - Optional ein Mixer dazu (Cola, Tonic, Saft …)
 - Promille-Schätzung nach Widmark, eigenes Limit, „wieder nüchtern“-Zeit
 - Rangliste: oben steht, wer im Limit bleibt und am wenigsten trinkt
+- Trinksprüche zum Kopieren, dazu „Prost“ in 24 Sprachen
+- Hintergrund aus den getrunkenen Getränken, der beim Drehen des Handys schwappt
 - Deutsch und Englisch, als App installierbar
 
 Alle Werte sind Schätzungen. Die App sagt nicht, ob man fahren darf.

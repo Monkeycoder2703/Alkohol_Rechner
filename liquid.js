@@ -1,7 +1,8 @@
 'use strict';
-/* Flüssigkeit im Hintergrund: Je näher der Promillewert am eigenen Limit ist, desto höher steht sie.
-   Auf dem Handy bleibt die Oberfläche waagerecht, wenn man das Gerät kippt, und schwappt kurz nach (gedämpfte Feder).
-   Gerechnet wird nur, solange sich etwas bewegt. Bei "weniger Bewegung" steht die Flüssigkeit still. */
+/* Flüssigkeit im Hintergrund, gezeichnet in ein Canvas. Je näher der Promillewert am eigenen Limit ist, desto höher steht sie.
+   Das Handy ist das Glas: Dreht man es, bleibt die Oberfläche waagerecht, schwappt nach und wirft Wellen,
+   die an den Bildschirmrändern zurücklaufen. Antippen oder die Maus über die Oberfläche ziehen macht ebenfalls Wellen.
+   Wellen: eine Reihe gekoppelter Federn (Höhe und Tempo je Spalte). Bei "weniger Bewegung" steht alles still. */
 // Farben der Getränke (R, G, B). Unbekannte Namen bekommen die Farbe ihrer Art.
 const GOLD = [242, 182, 50], CLEAR = [221, 232, 245], BROWN = [181, 101, 29], DARK = [74, 42, 22], RED = [155, 27, 48], PALE = [243, 227, 160], ORANGE = [255, 122, 47];
 const DRINK_RGB = (() => {
@@ -31,23 +32,102 @@ function drinkRGB(name, kind, amount, mixer, mixAmt) {
   return d.map((v, i) => Math.round(v * w + m[i] * (1 - w)));
 }
 const Liquid = (() => {
-  const bg = $('bg'), el = document.createElement('i'), wave = document.createElement('i');
-  el.className = 'liq empty'; wave.className = 'liq-wave'; el.append(wave); bg.insertBefore(el, bg.firstChild);
-  let ang = 0, vel = 0, target = 0, raf = 0, last = 0, listening = false;
-  function step(ts) {
-    const dt = Math.min(.05, Math.max(.001, (ts - last) / 1000)); last = ts;
-    vel += ((target - ang) * 70 - vel * 5) * dt; ang += vel * dt; // Feder: zieht zur Waagerechten, schwingt etwas über
-    el.style.setProperty('--tilt', ang.toFixed(2) + 'deg');
-    if (Math.abs(target - ang) < .05 && Math.abs(vel) < .05) { raf = 0; return; }
-    raf = requestAnimationFrame(step);
+  const bg = $('bg'), cv = document.createElement('canvas'); cv.className = 'liq'; bg.insertBefore(cv, bg.firstChild);
+  const ctx = cv.getContext('2d');
+  const N = LITE ? 44 : 72, hgt = new Float32Array(N), spd = new Float32Array(N), lD = new Float32Array(N), rD = new Float32Array(N);
+  const K = .022, DAMP = .009, SPREAD = .24, MAXH = 70; // Federhärte, Dämpfung (wenig = Wasser), Ausbreitung, größte Welle in px
+  let W = 0, H = 0, dpr = 1, fill = 0, fillTarget = 0, over = false, layers = [{ rgb: GOLD, share: 1 }];
+  let ang = 0, angV = 0, angT = 0, raf = 0, last = 0, acc = 0, frame = 0, nextDrip = 0, listening = false, t0 = performance.now();
+  function size() {
+    dpr = Math.min(devicePixelRatio || 1, LITE ? 1 : 1.5); W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); draw();
   }
-  const kick = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } };
+  addEventListener('resize', size);
+  const col = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const xs = (i) => i / (N - 1) * W;
+  // Höhe der Oberfläche an Spalte i (Bildschirm-y): Ruhelinie, gekippt um ang, plus Welle
+  const surf = (i, k) => H * (1 - fill) + (xs(i) - W / 2) * Math.tan(ang) + hgt[i] * k;
+  function splash(x, v) { const i = Math.max(1, Math.min(N - 2, Math.round(x / W * (N - 1)))); spd[i] += v; spd[i - 1] += v * .5; spd[i + 1] += v * .5; }
+  function physics() {
+    for (let i = 0; i < N; i++) { spd[i] += -K * hgt[i] - DAMP * spd[i]; hgt[i] += spd[i]; }
+    for (let p = 0; p < 6; p++) {
+      for (let i = 0; i < N; i++) { lD[i] = i > 0 ? SPREAD * (hgt[i] - hgt[i - 1]) : 0; rD[i] = i < N - 1 ? SPREAD * (hgt[i] - hgt[i + 1]) : 0; }
+      for (let i = 0; i < N; i++) { if (i > 0) { spd[i - 1] += lD[i]; hgt[i - 1] += lD[i]; } if (i < N - 1) { spd[i + 1] += rD[i]; hgt[i + 1] += rD[i]; } }
+    }
+    for (let i = 0; i < N; i++) hgt[i] = Math.max(-MAXH, Math.min(MAXH, hgt[i]));
+  }
+  // ein Schritt mit 60 Hz: Kippwinkel federt nach (das ist das Nachschwappen), seine Drehung wirft Wellen
+  function tick() {
+    const prev = ang; angV += ((angT - ang) * 90 - angV * 7) / 60; ang += angV / 60;
+    const turn = ang - prev; // Drehung in diesem Schritt: auf der einen Seite schwappt es hoch, auf der anderen runter
+    if (Math.abs(turn) > 1e-5) for (let i = 0; i < N; i++) spd[i] += -turn * (xs(i) - W / 2) * .9;
+    if (performance.now() > nextDrip) { splash(Math.random() * W, (Math.random() - .5) * 3); nextDrip = performance.now() + 900 + Math.random() * 1600; } // ruhiges Eigenleben
+    fill += (fillTarget - fill) * .03; physics();
+  }
+  function path(k, off) { // Linie parallel zur Oberfläche, k = wie stark sie die Welle mitmacht
+    ctx.moveTo(-2, surf(0, k) + off);
+    for (let i = 1; i < N - 1; i++) { const x = xs(i), y = surf(i, k) + off, nx = xs(i + 1), ny = surf(i + 1, k) + off; ctx.quadraticCurveTo(x, y, (x + nx) / 2, (y + ny) / 2); }
+    ctx.lineTo(W + 2, surf(N - 1, k) + off);
+  }
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    if (fill < .002) return;
+    const depth = fill * H, ls = layers.slice(-12), sum = ls.reduce((s, l) => s + Math.max(.06, l.share), 0), deep = H * 1.6;
+    // Schichten von oben (zuletzt getrunken) nach unten; innere Grenzen machen die Welle abgeschwächt mit
+    let y = 0;
+    for (let j = ls.length - 1; j >= 0; j--) {
+      const hgtL = j === 0 ? deep : Math.max(.06, ls[j].share) / sum * depth, k1 = Math.pow(.55, ls.length - 1 - j), k2 = k1 * .55;
+      ctx.beginPath(); path(k1, y); ctx.lineTo(W + 2, H + deep); ctx.lineTo(-2, H + deep); ctx.closePath();
+      if (j > 0) { ctx.save(); ctx.beginPath(); path(k1, y); const yb = y + hgtL; ctx.lineTo(W + 2, surf(N - 1, k2) + yb); for (let i = N - 2; i >= 0; i--) ctx.lineTo(xs(i), surf(i, k2) + yb); ctx.closePath(); }
+      ctx.fillStyle = col(ls[j].rgb, j === ls.length - 1 ? .40 : .34); ctx.fill(); if (j > 0) ctx.restore();
+      y += hgtL;
+    }
+    // Tiefe: nach unten dunkler, wie in einem vollen Glas
+    const top = H * (1 - fill) - Math.abs(Math.tan(ang)) * W / 2 - MAXH;
+    const g = ctx.createLinearGradient(0, top, 0, H); g.addColorStop(0, 'rgba(4,6,16,0)'); g.addColorStop(1, 'rgba(4,6,16,.42)');
+    ctx.beginPath(); path(1, 0); ctx.lineTo(W + 2, H + 2); ctx.lineTo(-2, H + 2); ctx.closePath(); ctx.fillStyle = g; ctx.fill();
+    // Lichtbänder im Wasser (Kaustik): langsam wandernde, helle Wellenlinien unter der Oberfläche
+    if (!LITE || frame % 2 === 0) {
+      const tt = (performance.now() - t0) / 1000; ctx.save(); ctx.beginPath(); path(1, 0); ctx.lineTo(W + 2, H + 2); ctx.lineTo(-2, H + 2); ctx.closePath(); ctx.clip();
+      ctx.lineWidth = 2; for (let c = 0; c < 4; c++) {
+        ctx.beginPath(); const base = 26 + c * 38;
+        for (let x = -10; x <= W + 10; x += 14) { const yy = H * (1 - fill) + (x - W / 2) * Math.tan(ang) + base + Math.sin(x / (60 + c * 17) + tt * (.7 + c * .23)) * (7 + c * 2); x < 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); }
+        ctx.strokeStyle = `rgba(255,255,255,${.07 - c * .012})`; ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // Oberfläche: helle Kante (bei Überschreitung rot), darunter ein weicher Lichtschimmer
+    ctx.beginPath(); path(1, 5); ctx.lineWidth = 10; ctx.strokeStyle = over ? 'rgba(255,77,106,.20)' : 'rgba(255,255,255,.07)'; ctx.stroke();
+    ctx.beginPath(); path(1, 0); ctx.lineWidth = over ? 3 : 2; ctx.strokeStyle = over ? 'rgba(255,77,106,.9)' : 'rgba(255,245,220,.62)'; ctx.stroke();
+    // Glanzpunkte auf den Wellenkämmen
+    ctx.fillStyle = 'rgba(255,255,255,.5)';
+    for (let i = 2; i < N - 2; i += 3) if (hgt[i] < -6 && hgt[i] <= hgt[i - 1] && hgt[i] <= hgt[i + 1]) { ctx.beginPath(); ctx.arc(xs(i), surf(i, 1) + 2, 1.8, 0, 7); ctx.fill(); }
+  }
+  function loop(ts) {
+    raf = 0; if (document.hidden) return;
+    acc += Math.min(.1, (ts - last) / 1000); last = ts;
+    while (acc >= 1 / 60) { tick(); acc -= 1 / 60; }
+    frame++; if (!LITE || frame % 2 === 0) draw(); // Handy: 30 Bilder pro Sekunde reichen und sparen Akku
+    if (fillTarget > 0 || fill > .002) raf = requestAnimationFrame(loop); else draw();
+  }
+  const run = () => { if (!raf && !REDUCED && !document.hidden) { last = performance.now(); acc = 0; raf = requestAnimationFrame(loop); } };
+  document.addEventListener('visibilitychange', run);
+  // Lage des Handys -> Winkel der Oberfläche. Schwerkraft aus beta/gamma, damit es auch im Hochformat stimmt.
   function onTilt(e) {
-    if (e.gamma == null || e.beta == null) return;
-    const o = (screen.orientation && screen.orientation.angle) || 0;
-    const g = o === 90 ? e.beta : o === 270 ? -e.beta : e.gamma; // Querformat: andere Achse
-    target = Math.max(-40, Math.min(40, -g)); kick();
+    if (e.beta == null || e.gamma == null) return;
+    const b = e.beta * Math.PI / 180, g = e.gamma * Math.PI / 180, ux = -Math.sin(g) * Math.cos(b), uy = Math.sin(b), m = Math.hypot(ux, uy);
+    const o = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * Math.PI / 180;
+    let roll = Math.atan2(ux, uy) - o; while (roll > Math.PI) roll -= 2 * Math.PI; while (roll < -Math.PI) roll += 2 * Math.PI;
+    const w = Math.max(0, Math.min(1, (m - .15) / .45)); // flach liegendes Handy: Oberfläche bleibt eher gerade
+    angT = Math.max(-.85, Math.min(.85, roll * w)); run();
   }
+  // Mit der Maus über die Oberfläche fahren oder antippen: Wellen
+  let px = null;
+  addEventListener('pointermove', (e) => {
+    if (fill < .01) return; const i = Math.round(e.clientX / W * (N - 1)), near = Math.abs(e.clientY - surf(Math.max(0, Math.min(N - 1, i)), 1)) < 60;
+    if (near && px !== null) splash(e.clientX, Math.max(-6, Math.min(6, (e.clientX - px) * .25 + 1.5))); px = e.clientX; run();
+  }, { passive: true });
+  addEventListener('pointerdown', (e) => { if (fill > .01 && e.clientY > surf(0, 0) - 80) { splash(e.clientX, 9); run(); } }, { passive: true });
   const supported = 'DeviceOrientationEvent' in window && !REDUCED;
   const canAsk = supported && typeof DeviceOrientationEvent.requestPermission === 'function';
   const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -66,20 +146,13 @@ const Liquid = (() => {
   }
   // p = Anteil am Limit (1 = Limit erreicht). Am Limit steht die Flüssigkeit bei 70 % der Höhe, mehr als 90 % werden es nie, damit man die Oberfläche noch sieht.
   // layers = die getrunkenen Getränke von unten (zuerst getrunken) nach oben, jeweils { rgb: [r, g, b], share: Anteil }.
-  // Jede Schicht bekommt die Farbe ihres Getränks; die Dicke richtet sich nach dem Alkohol, den es beigetragen hat.
-  function set(p, over, layers) {
-    const f = Math.max(0, Math.min(.9, p * .7));
-    el.style.setProperty('--fill', f.toFixed(3)); el.classList.toggle('empty', f <= 0); el.classList.toggle('over', !!over);
-    if (f <= 0) return;
-    const ls = (layers && layers.length ? layers : [{ rgb: GOLD, share: 1 }]).slice(-12); // höchstens die letzten 12 Schichten
-    const min = .06, sum = ls.reduce((s, l) => s + Math.max(min, l.share), 0), depth = f * 100, soft = Math.min(1.2, depth / ls.length / 4);
-    const col = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`, stops = []; let y = 0;
-    for (let i = ls.length - 1; i >= 0; i--) { // oben beginnt die zuletzt getrunkene Schicht
-      const h = Math.max(min, ls[i].share) / sum * depth, a = i === ls.length - 1 ? .42 : .34;
-      stops.push(`${col(ls[i].rgb, a)} ${(y + (y ? soft : 0)).toFixed(2)}vh`, `${col(ls[i].rgb, .3)} ${(y + h - (i ? soft : 0)).toFixed(2)}vh`); y += h;
-    }
-    stops.push(`${col(ls[0].rgb, .16)} 170vmax`);
-    el.style.background = `linear-gradient(180deg,${stops.join(',')})`;
+  // p = Anteil am Limit (1 = Limit erreicht): am Limit 70 % der Höhe, mehr als 90 % werden es nie.
+  function set(p, ov, ls) {
+    const f = Math.max(0, Math.min(.9, p * .7)), rose = f - fillTarget;
+    fillTarget = f; over = !!ov; if (ls && ls.length) layers = ls; else if (f <= 0) layers = [{ rgb: GOLD, share: 1 }];
+    if (rose > .01 && fill > .002) for (let k = 0; k < 3; k++) splash(W * (.3 + Math.random() * .4), 10 + Math.random() * 8); // neues Getränk: es plätschert
+    if (REDUCED) { fill = fillTarget; draw(); } else run();
   }
+  size();
   return { set, enable, needsAsk, supported };
 })();
