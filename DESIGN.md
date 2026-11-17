@@ -18,6 +18,8 @@ Bühne `#070B1A`, Gold `#F5C451` (Hauptaktion), warmes Gold `#E89A3C` (Glow), Cr
 ## Hintergrund
 Ruhige Nacht: ein sanfter blauer Lichtschein von oben, ein Hauch Gold von unten, darin viele feine aufsteigende Bläschen (26 auf dem Handy, 54 am PC). Keine Farbwolken, keine Punkte, kein Wasser-Effekt. Bei „weniger Bewegung“ stehen die Bläschen still. Die Farbwolken gibt es nur noch im Party-Modus.
 
+`liquid.js`: Hinter allem steht eine goldene Flüssigkeit. Sie steigt mit dem Promillewert (am eigenen Limit 70 % der Bildschirmhöhe, darüber wird sie rot, höchstens 90 %). Kippt man das Handy, bleibt die Oberfläche waagerecht und schwappt kurz nach. Das iPhone braucht dafür eine Erlaubnis (Konto → Flüssigkeit kippen). Animationen laufen auch beim Scrollen weiter.
+
 Schrift, Abstände, Eckenradius, Icons, CSP und Zustände wie im Koffein Rechner (Bricolage Grotesque, Skala 4–72 px, Radius 16 px, SVG-Sprite, kein Inline-Style/-Script).
 
 ## Rechnung

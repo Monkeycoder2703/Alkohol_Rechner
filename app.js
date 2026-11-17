@@ -121,7 +121,7 @@ function show(loggedIn, name) {
   $('auth-view').hidden = loggedIn; $('app-view').hidden = !loggedIn; $('userbox').hidden = !loggedIn; $('chaos').hidden = !loggedIn;
   $('who').textContent = name || ''; $('who2').textContent = name || '';
   document.body.classList.remove('booting');
-  if (!loggedIn) { Chaos.stop(); setChaosUI(); }
+  if (!loggedIn) { Chaos.stop(); setChaosUI(); Liquid.set(0, false); }
   if (loggedIn) { requestAnimationFrame(moveAll); Chaos.preload(); }
 }
 async function enter(user) {
@@ -526,7 +526,7 @@ function renderLevel(animate) {
   pill.querySelector('svg').replaceWith(ico(ic)); $('warn').textContent = text; pill.classList.toggle('over', over || bac >= 1.5);
   if (animate) { pill.classList.remove('pop'); void pill.offsetWidth; pill.classList.add('pop'); }
   if (animate && over && prev <= lim + EPS) { $('cup').classList.remove('shake'); void $('cup').offsetWidth; $('cup').classList.add('shake'); }
-  state.bac = bac; renderStage(bac); renderClear(list, now);
+  state.bac = bac; Liquid.set(p, over); renderStage(bac); renderClear(list, now);
 }
 setInterval(() => { if (state.loggedIn) { renderLevel(false); renderSelection(); } }, 60000);
 function renderDash(newest, animate) {
@@ -688,6 +688,11 @@ setTimeout(() => document.body.classList.remove('booting'), 6000);
 
 // Esc beendet den Party-Modus sofort (der Dialog schließt sich bei Esc ohnehin selbst)
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && Chaos.on) { Chaos.stop(); setChaosUI(); } });
+// iPhone: Bewegungssensor braucht eine Erlaubnis, deshalb gibt es dort einen Knopf
+(() => {
+  if (!Liquid.needsAsk) return; $('tilt-box').hidden = false;
+  $('tilt-on').onclick = async () => { const okk = await Liquid.enable(); toast(t(okk ? 'tilt_ok' : 'tilt_no'), okk ? '' : 'err'); };
+})();
 // Schalter für Effekte trotz "weniger Bewegung" im System
 (() => {
   const box = $('fx-box'), b = $('fx-toggle'); if (!box || !SYSTEM_REDUCED) return;
