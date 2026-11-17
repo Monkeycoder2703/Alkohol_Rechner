@@ -490,6 +490,13 @@ function statusFor(bac, p, any) {
   if (p < .5) return ['beer', t('s50')]; if (p < .8) return ['drop', t('s80')];
   return ['alert', t('s100')];
 }
+// Stufen nach geschätztem Promillewert: nüchtern, kaum spürbar, spürbar, angetrunken, Rausch, komplett dicht, Lebensgefahr
+const LEVELS = [0.01, 0.3, 0.5, 1, 2, 3];
+const levelOf = (bac) => LEVELS.filter((x) => bac >= x).length;
+function renderStage(bac) {
+  const l = levelOf(bac); $('lvl').dataset.l = l; $('lvl').hidden = !hasBody();
+  $('lvl-t').textContent = t('lvl_' + l); $('lvl-x').textContent = t('lvl_x' + l);
+}
 // Wann bist du wieder nüchtern? Vorsichtig gerechnet mit 0,1 Promille pro Stunde.
 function renderClear(list, now) {
   const box = $('clear');
@@ -518,7 +525,7 @@ function renderLevel(animate) {
   pill.querySelector('svg').replaceWith(ico(ic)); $('warn').textContent = text; pill.classList.toggle('over', over || bac >= 1.5);
   if (animate) { pill.classList.remove('pop'); void pill.offsetWidth; pill.classList.add('pop'); }
   if (animate && over && prev <= lim + EPS) { $('cup').classList.remove('shake'); void $('cup').offsetWidth; $('cup').classList.add('shake'); }
-  state.bac = bac; renderClear(list, now);
+  state.bac = bac; renderStage(bac); renderClear(list, now);
 }
 setInterval(() => { if (state.loggedIn) { renderLevel(false); renderSelection(); } }, 60000);
 function renderDash(newest, animate) {

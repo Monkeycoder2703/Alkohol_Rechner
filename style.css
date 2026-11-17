@@ -569,3 +569,10 @@ dialog select{width:100%}
 .drinks>*,.size-grid>*{min-width:0}
 .d-name,.sel-sum b,.log .nm{overflow-wrap:anywhere;hyphens:auto}
 @media (max-width:900px){.drinks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Stufe: wie sich der geschätzte Wert ungefähr anfühlt */
+.lvl{display:grid;gap:var(--s1);justify-items:center;margin:var(--s2) auto 0;max-width:34ch}
+.lvl b{display:inline-block;padding:var(--s1) var(--s3);border-radius:var(--r);border:1.5px solid currentColor;font-size:1.05rem;font-weight:800;color:var(--volt);background:color-mix(in srgb,currentColor 12%,transparent)}
+.lvl span{color:var(--mute);font-size:.9rem}
+.lvl[data-l="2"] b{color:var(--honey)}.lvl[data-l="3"] b{color:var(--accent)}.lvl[data-l="4"] b{color:var(--spritz)}
+.lvl[data-l="5"] b,.lvl[data-l="6"] b{color:var(--danger)}
