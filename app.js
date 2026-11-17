@@ -526,7 +526,9 @@ function renderLevel(animate) {
   pill.querySelector('svg').replaceWith(ico(ic)); $('warn').textContent = text; pill.classList.toggle('over', over || bac >= 1.5);
   if (animate) { pill.classList.remove('pop'); void pill.offsetWidth; pill.classList.add('pop'); }
   if (animate && over && prev <= lim + EPS) { $('cup').classList.remove('shake'); void $('cup').offsetWidth; $('cup').classList.add('shake'); }
-  state.bac = bac; Liquid.set(p, over); renderStage(bac); renderClear(list, now);
+  const day = todays().slice().sort((a, b) => new Date(a.ts) - new Date(b.ts)), gsum = day.reduce((s, i) => s + Number(i.grams), 0) || 1;
+  const layers = day.map((i) => { const d = state.drinks.find((x) => x.name === i.name); return { rgb: drinkRGB(i.name, d && d.kind, i.amount, i.mixer, i.mixer_amount), share: Number(i.grams) / gsum }; });
+  state.bac = bac; Liquid.set(p, over, layers); renderStage(bac); renderClear(list, now);
 }
 setInterval(() => { if (state.loggedIn) { renderLevel(false); renderSelection(); } }, 60000);
 function renderDash(newest, animate) {
