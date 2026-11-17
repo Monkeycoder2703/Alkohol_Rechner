@@ -76,24 +76,40 @@ function toast(text, kind) {
   }
 })();
 
-/* ---------- Krug (animiertes SVG) ---------- */
+/* ---------- Glas (animiertes SVG): Form und Farbe passen zum zuletzt getrunkenen Getränk, sonst eine Halbe ---------- */
 let cupN = 0;
-function cupEl() {
-  const id = 'cc' + (++cupN), wave = 'M-20 8q30-8 60 0t60 0t60 0t60 0t60 0t60 0t60 0t60 0V230H-20Z', body = 'M40 22H160V146A14 14 0 0 1 146 160H54A14 14 0 0 1 40 146Z', d = document.createElement('div');
-  d.innerHTML = `<svg class="cup-svg" viewBox="0 -34 210 244" role="img" aria-hidden="true">
-    <defs><clipPath id="${id}"><path d="${body}"/></clipPath></defs>
+const DEFAULT_GLASS = () => glassFor('', 'beer', 500);
+function cupEl(spec = DEFAULT_GLASS()) {
+  const G = GLASSES[spec.g] || GLASSES.halbe, id = 'cc' + (++cupN), d = document.createElement('div'), y0 = G.top;
+  const wave = 'M-20 8q30-8 60 0t60 0t60 0t60 0t60 0t60 0t60 0t60 0V260H-20Z';
+  const ice = spec.ice ? '<rect class="ice" x="66" y="14" width="28" height="28" rx="5" transform="rotate(-12 80 28)"/><rect class="ice" x="104" y="20" width="26" height="26" rx="5" transform="rotate(16 117 33)"/>' : '';
+  const sy = y0 - 14; // Bläschen bzw. Schaumperlen über dem Rand
+  d.innerHTML = `<svg class="cup-svg g-${spec.g}${spec.foam ? ' foam' : ''}${spec.sparkle ? '' : ' still'}" viewBox="0 -34 210 244" role="img" aria-hidden="true">
+    <defs><clipPath id="${id}"><path d="${G.body}"/></clipPath></defs>
     <ellipse class="saucer" cx="100" cy="174" rx="82" ry="9"/>
-    <g class="steam"><path d="M74 8a5 5 0 1 0 .1 0Z"/><path d="M101 0a7 7 0 1 0 .1 0Z"/><path d="M127 9a4 4 0 1 0 .1 0Z"/></g>
-    <path class="body-fill" d="${body}"/>
-    <g clip-path="url(#${id})"><g class="liquid"><g class="wave w2"><path d="${wave}"/></g><g class="wave w1"><path d="${wave}" transform="translate(0 7)"/></g></g></g>
-    <path class="handle" d="M160 48h8a22 22 0 0 1 22 22v22a22 22 0 0 1-22 22h-8"/>
-    <path class="outline" d="${body}"/>
-    <path class="shine" d="M58 44V112"/>
-    <path class="stream" pathLength="100" d="M100 -34C100 0 100 40 100 150"/>
+    <g class="steam" transform="translate(0 ${sy})"><path d="M74 8a5 5 0 1 0 .1 0Z"/><path d="M101 0a7 7 0 1 0 .1 0Z"/><path d="M127 9a4 4 0 1 0 .1 0Z"/></g>
+    <path class="body-fill" d="${G.body}"/>
+    <g clip-path="url(#${id})"><g class="liquid"><g class="wave w2"><path d="${wave}"/></g><g class="wave w1"><path d="${wave}" transform="translate(0 ${spec.foam ? 12 : 7})"/></g>${ice}</g></g>
+    ${spec.straw ? `<path class="straw" d="M128 ${y0 - 30}L112 ${G.bottom - 24}"/>` : ''}
+    <path class="outline" d="${G.body}"/>
+    <path class="extra" d="${G.extra}"/>
+    <path class="shine" d="${G.shine}"/>
+    <path class="stream" pathLength="100" d="M100 -34C100 0 100 ${Math.round(G.bottom / 3)} 100 ${G.bottom}"/>
   </svg>`;
-  return d.firstElementChild;
+  const svg = d.firstElementChild, c = spec.rgb, light = c.map((v) => Math.round(v + (255 - v) * .45));
+  // Füllhöhe: leer knapp unter dem Boden, voll knapp unter dem Rand
+  svg.style.setProperty('--l0', G.bottom + 5); svg.style.setProperty('--lr', G.bottom + 5 - (G.top - 4));
+  svg.style.setProperty('--liq', `rgb(${c.join(',')})`); svg.style.setProperty('--liq2', spec.foam ? '#FFF6E0' : `rgb(${light.join(',')})`);
+  svg.dataset.key = spec.g + c.join('-') + (spec.ice ? 'i' : '') + (spec.straw ? 's' : '');
+  return svg;
 }
-function mountCup(host) { host.replaceChildren(cupEl()); return host; }
+function mountCup(host, spec) { host.replaceChildren(cupEl(spec)); return host; }
+// Glas zum zuletzt eingetragenen Getränk des Tages
+function lastGlass() {
+  const last = todays()[0]; if (!last) return DEFAULT_GLASS();
+  const d = state.drinks.find((x) => x.name === last.name);
+  return glassFor(last.name, d && d.kind, last.amount, last.mixer, last.mixer_amount);
+}
 function setLevel(p) { $('cup').style.setProperty('--lvl', Math.max(0, Math.min(1, p)).toFixed(3)); }
 
 /* ---------- Effekte ---------- */
@@ -515,7 +531,10 @@ function renderClear(list, now) {
 function renderLevel(animate) {
   const now = Date.now(), list = state.recent || [], lim = limit(), bac = hasBody() ? bacNow(list, now, ELIM) : 0;
   const over = bac > lim + EPS, p = bac / lim, prev = state.bac;
-  if (!$('cup').firstChild) mountCup($('cup'));
+  const spec = lastGlass(), cur = $('cup').firstElementChild, fresh = cupEl(spec);
+  if (!cur || cur.dataset.key !== fresh.dataset.key) { // anderes Glas: austauschen, kurz wippen lassen
+    $('cup').replaceChildren(fresh); if (cur && animate) { $('cup').classList.remove('swap'); void $('cup').offsetWidth; $('cup').classList.add('swap'); }
+  }
   const hund = (v) => fmtP(v / 100);
   countTo($('total'), Math.round(bac * 100), animate ? 1100 : 0, hund); countTo($('remaining'), Math.round(Math.abs(lim - bac) * 100), animate ? 1100 : 0, hund);
   $('ll-pre').textContent = t(over ? 'over_pre' : 'left_pre'); $('ll-post').textContent = t(over ? 'over_post' : 'left_post', { lim: fmtL(lim) });
@@ -563,7 +582,7 @@ $('add').onclick = async () => {
   const btn = $('add'), amount = state.amount, g = gramsFor(d, amount); btn.disabled = true;
   try {
     const id = ok(await sb.rpc('add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? state.mixAmt : null }));
-    await playLoader();
+    await playLoader(glassFor(d.name, d.kind, amount, m ? m.name : null, m ? state.mixAmt : null));
     await refresh(id);
     const r = $('cup').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * .35, `+${fmtG(g)} g`);
     toast(t('added', { name: m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name) }));
@@ -582,10 +601,10 @@ function nextFact() {
   lastFact = factBag.pop(); try { localStorage.setItem('ar-lastfact', String(lastFact)); } catch { /* egal */ }
   return list[lastFact];
 }
-async function playLoader() {
+async function playLoader(spec) {
   const f = nextFact(), L = $('loader');
   $('ld-fact').replaceChildren(h('span', { class: 'ld-ico' }, ico(f.i)), h('h3', { text: f.t }), h('p', { text: f.x }));
-  mountCup($('ld-cup')); L.setAttribute('aria-hidden', 'false'); L.classList.add('on');
+  mountCup($('ld-cup'), spec); L.setAttribute('aria-hidden', 'false'); L.classList.add('on');
   // Anzeigedauer richtet sich nach der Länge des Spruchs (ca. 7 bis 12 Sekunden); Tippen beendet früher
   const ms = Math.min(12000, Math.max(7000, 3500 + (f.t.length + f.x.length) * 45));
   L.style.setProperty('--ld', ms + 'ms');
@@ -597,15 +616,15 @@ async function playLoader() {
 /* ---------- Trinksprüche ---------- */
 const tst = { cat: 'classic', last: '' };
 function toastPool() { // für den Zufallsknopf: alle eigenen Sprüche der Sprache
-  const T = TOASTS[LANG]; return [...T.classic.map((x) => ['classic', x]), ...T.funny.map((x) => ['funny', x]), ...T.calm.map((x) => ['calm', x])];
+  const T = TOASTS[LANG]; return ['classic', 'rhyme', 'funny', 'calm'].flatMap((c) => T[c].map((x) => [c, ...(Array.isArray(x) ? x : [x, ''])]));
 }
 function showToast(cat, text, sub) {
   $('tc-cat').textContent = t('tc_' + cat); const q = $('tc-text'); q.replaceChildren(h('span', { text })); if (sub) q.append(h('small', { text: sub }));
   tst.last = text + (sub ? ' (' + sub + ')' : ''); q.classList.remove('in'); void q.offsetWidth; q.classList.add('in');
 }
 function randomToast() {
-  const pool = toastPool(); let pick; do { pick = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && pick[1] === tst.last);
-  showToast(pick[0], pick[1]);
+  const pool = toastPool(); let pick; do { pick = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && tst.last.startsWith(pick[1]));
+  showToast(pick[0], pick[1], pick[2]);
 }
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); toast(t('toasts_copied')); }
@@ -615,10 +634,10 @@ function renderToasts() {
   const ul = $('toast-list'); ul.replaceChildren();
   const items = tst.cat === 'world'
     ? CHEERS.map((c) => ({ main: c[0], sub: [LANG === 'de' ? c[2] : c[3], c[1] && LANG === 'de' ? t('toasts_say', { p: c[1] }) : ''].filter(Boolean).join(' · ') }))
-    : TOASTS[LANG][tst.cat].map((x) => ({ main: x, sub: '' }));
+    : TOASTS[LANG][tst.cat].map((x) => (Array.isArray(x) ? { main: x[0], sub: x[1] } : { main: x, sub: '' }));
   items.forEach((it, i) => {
     const cp = h('button', { class: 'icon-btn', type: 'button', 'aria-label': t('toasts_copy'), title: t('toasts_copy') }, ico('copy'));
-    cp.onclick = () => copyText(it.main);
+    cp.onclick = () => copyText(tst.cat === 'classic' && it.sub ? `${it.main} (${it.sub})` : it.main);
     const li = h('li', {}, h('span', { class: 'tx' }, h('b', { text: it.main }), it.sub ? h('small', { text: it.sub }) : null), cp);
     li.style.setProperty('--i', i); li.onclick = (e) => { if (!e.target.closest('button')) showToast(tst.cat, it.main, it.sub); };
     ul.append(li);

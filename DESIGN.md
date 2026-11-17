@@ -41,4 +41,7 @@ Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen im Profil
 
 
 ## Trinksprüche
-`toasts.js`: eigene kurze Sprüche je Sprache in drei Gruppen (Klassiker, Lustig, Mit Maß) und „Prost“ in 24 Sprachen. Oben ein großer Zufallsspruch zum Kopieren. Die Sprüche sollen gute Laune machen, nie zum Mehrtrinken drängen.
+`toasts.js`: vier Gruppen je Sprache – Klassiker (alte, freie Sprüche mit Herkunft), Reime, Lustig, Mit Maß – und „Prost“ in 24 Sprachen. Oben ein großer Zufallsspruch zum Kopieren. Die Sprüche sollen gute Laune machen, nie zum Mehrtrinken drängen.
+
+## Gläser
+`glasses.js`: Der Becher auf der Startseite zeigt das Glas des zuletzt eingetragenen Getränks in dessen Farbe (Halbe, Maß ab 0,9 l Bier, Weizen, Pilstulpe, Stange, Pint, Wein, Rotwein-/Spritzkelch, Sektflöte, Glühweintasse, Stamperl, Tumbler, Longdrink mit Strohhalm, Cocktailschale). Bier hat eine Schaumkrone, Longdrinks und Spritz haben Eis. Ohne Getränk steht eine Halbe da.

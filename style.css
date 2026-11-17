@@ -205,17 +205,17 @@ small,.hint{color:var(--mute);font-size:.875rem}
 /* ---------- Tasse ---------- */
 .cup-svg{width:100%;height:auto;overflow:visible;display:block}
 .cup-svg .saucer{fill:color-mix(in srgb,var(--accent) 38%,transparent)}
-.cup-svg .body-fill{fill:var(--porcelain)}
-.cup-svg .outline,.cup-svg .handle{fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.cup-svg .body-fill{fill:color-mix(in srgb,var(--porcelain) 75%,transparent)}
+.cup-svg .outline,.cup-svg .extra{fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
 .cup-svg .shine{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;opacity:.3}
 .cup-svg .steam path{fill:none;stroke:var(--honey);stroke-width:4;stroke-linecap:round;opacity:0;animation:steam 3.2s ease-in-out infinite}
 .cup-svg .steam path:nth-child(2){animation-delay:.7s}
 .cup-svg .steam path:nth-child(3){animation-delay:1.4s}
-.cup-svg .liquid{transform:translateY(calc(165px - var(--lvl,0)*155px));transition:transform 1.5s var(--ease)}
-.cup-svg .wave path{fill:var(--coffee);transition:fill .5s}
+.cup-svg .liquid{transform:translateY(calc(var(--l0,165)*1px - var(--lvl,0)*var(--lr,147)*1px));transition:transform 1.5s var(--ease)}
+.cup-svg .wave path{fill:var(--liq,var(--coffee));fill-opacity:.88;transition:fill .5s}
 .cup-svg .wave.w1{animation:waveX 3.4s linear infinite}
 .cup-svg .wave.w2{animation:waveX 5.2s linear infinite reverse}
-.cup-svg .wave.w2 path{fill:var(--coffee-2);opacity:.9}
+.cup-svg .wave.w2 path{fill:var(--liq2,var(--coffee-2));opacity:.9}
 .cup.over .wave path{fill:var(--danger)}
 .cup.shake{animation:shake .7s var(--ease)}
 .cup--demo .liquid{animation:demoLevel 7s ease-in-out infinite alternate;transition:none}
@@ -325,8 +325,8 @@ dialog .row{display:flex;gap:var(--s3);justify-content:flex-end;flex-wrap:wrap}
 @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px) rotate(-1.5deg)}35%{transform:translateX(7px) rotate(1.2deg)}55%{transform:translateX(-5px)}75%{transform:translateX(3px)}}
 @keyframes steam{0%{opacity:0;transform:translateY(10px)}30%{opacity:.6}100%{opacity:0;transform:translateY(-16px)}}
 @keyframes waveX{to{transform:translateX(-120px)}}
-@keyframes demoLevel{from{transform:translateY(118px)}to{transform:translateY(26px)}}
-@keyframes fillUp{from{transform:translateY(165px)}to{transform:translateY(24px)}}
+@keyframes demoLevel{from{transform:translateY(calc((var(--l0,165) - var(--lr,147)*.3)*1px))}to{transform:translateY(calc((var(--l0,165) - var(--lr,147)*.92)*1px))}}
+@keyframes fillUp{from{transform:translateY(calc(var(--l0,165)*1px))}to{transform:translateY(calc((var(--l0,165) - var(--lr,147)*.94)*1px))}}
 @keyframes pourStream{0%{stroke-dashoffset:100}10%{stroke-dashoffset:0}86%{stroke-dashoffset:0}100%{stroke-dashoffset:-100}}
 @keyframes bar{to{transform:scaleX(1)}}
 @keyframes shimmer{to{background-position:-200% 0}}
@@ -512,3 +512,11 @@ html.reduce #bg .fb{animation:none;opacity:var(--o,.5);bottom:var(--y,50%)}
 .toast-list li .tx small{color:var(--mute)}
 .toast-list li .icon-btn{flex:none}
 @media (max-width:560px){#main-tabs button{font-size:.7rem}#main-tabs button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}}
+
+/* Gläser */
+.cup-svg .ice{fill:rgba(255,255,255,.22);stroke:rgba(255,255,255,.7);stroke-width:2.5}
+.cup-svg .straw{fill:none;stroke:var(--volt);stroke-width:7;stroke-linecap:round}
+.cup-svg.still .steam{display:none}
+.cup-svg .steam path{stroke:var(--liq2,var(--honey))}
+.cup.swap{animation:pop .6s var(--spring)}
+@media (max-width:420px){.toast-seg button{font-size:.82rem;padding-inline:2px}}
