@@ -291,7 +291,10 @@ $('body-form').onsubmit = async (e) => {
 /* ---------- Dashboard: Getränk, Menge, Mixer ---------- */
 const sel = () => state.drinks.find((x) => x.id === state.selected);
 const mixer = () => (state.mixer == null ? null : state.mixers.find((x) => x.id === state.mixer) || null);
-const shown = () => state.drinks.filter((d) => d.kind === state.kind);
+// Suche geht über alle Arten, sonst zeigt die Liste nur die gewählte Art
+const norm = (x) => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const shown = () => { const q = norm($('drink-q').value.trim()); return q ? state.drinks.filter((d) => norm(d.name).includes(q) || norm(drinkName(d.name)).includes(q)) : state.drinks.filter((d) => d.kind === state.kind); };
+$('drink-q').oninput = () => { if (sel() && !shown().includes(sel())) { state.selected = null; state.amount = null; state.custom = false; state.mixer = null; } renderDrinks(); };
 async function loadDrinks() {
   state.drinks = ok(await sb.from('drinks').select('id,name,abv,portion,sizes,kind').order('sort'));
   state.mixers = ok(await sb.from('mixers').select('id,name').order('sort'));
@@ -303,7 +306,7 @@ function renderKinds() {
   KINDS.forEach((k) => {
     const b = h('button', { role: 'tab', type: 'button', 'aria-selected': String(k === state.kind) }, ico(KIND_ICON[k]), h('span', { text: t('kind_' + k) }));
     b.onclick = () => {
-      state.kind = k; select(nav, b);
+      state.kind = k; select(nav, b); $('drink-q').value = '';
       if (sel() && sel().kind !== k) { state.selected = null; state.amount = null; state.custom = false; state.mixer = null; }
       renderDrinks();
     };
@@ -326,7 +329,7 @@ function renderDrinks() {
     };
     box.append(tile);
   });
-  if (!list.length) box.append(h('p', { class: 'hint', text: t('no_drinks') }));
+  if (!list.length) box.append(h('p', { class: 'hint', text: t($('drink-q').value.trim() ? 'search_none' : 'no_drinks') }));
   renderSizes(false); renderMix(); renderSelection();
 }
 const validAmount = (v) => Number.isInteger(v) && v >= 1 && v <= 2000;

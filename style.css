@@ -546,3 +546,14 @@ html.lite #bg,html.lite #fx,html.lite #eq{transform:translateZ(0)}
 .help a{color:var(--volt);font-weight:600;text-underline-offset:4px}
 .disclaimer{margin-top:var(--s5);color:var(--mute);font-size:.82rem}
 dialog select{width:100%}
+
+/* Mittig auf dem Handy: die Spalte darf nicht breiter werden als der Bildschirm */
+.dash>*{min-width:0}
+.kinds button{flex:1 1 0;min-width:0;padding:var(--s2) var(--s1);gap:var(--s1)}
+.kinds button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search{margin-bottom:var(--s3)}
+.search input{width:100%;min-height:48px;padding:0 var(--s3);background:color-mix(in srgb,var(--surface) 60%,transparent);border:1.5px solid var(--line);border-radius:var(--r)}
+.search input:focus{outline:0;border-color:var(--accent)}
+.search input::placeholder{color:color-mix(in srgb,var(--mute) 70%,transparent)}
+@media (max-width:900px){.dash{grid-template-columns:minmax(0,1fr)}.stage{position:static}}
+@media (max-width:400px){.kinds button .ico{display:none}}

@@ -31,6 +31,7 @@ de: {
   done_title: 'Schau in dein Postfach', done_sub: 'Wir haben dir eine E-Mail geschickt. Ein Klick auf den Link darin, und du bist drin. Nichts gefunden? Schau auch im Spam-Ordner.', to_login: 'Zur Anmeldung',
   tab_today: 'Heute', tab_board: 'Rangliste', tab_suggest: 'Vorschlag', tab_account: 'Konto', tabs_aria: 'Bereiche',
   what_drink: 'Was trinkst du?', pick_aria: 'Getränk wählen', pick_hint: 'Wähle ein Getränk.', add: 'Eintragen',
+  search_ph: 'Getränk suchen', search_none: 'Nichts gefunden. Schick uns gern einen Vorschlag.',
   kinds_aria: 'Getränkeart', kind_beer: 'Bier', kind_wine: 'Wein', kind_spirit: 'Schnaps', kind_mixed: 'Mix',
   today_h: 'Heute getrunken', count_one: 'Getränk', count_many: 'Getränke', progress_aria: 'Anteil an deinem Limit in Prozent',
   day_sum: 'Heute insgesamt: {g} g reiner Alkohol',
@@ -106,6 +107,7 @@ en: {
   done_title: 'Check your inbox', done_sub: "We've sent you an email. One click on the link inside and you're in. Nothing there? Check your spam folder too.", to_login: 'To login',
   tab_today: 'Today', tab_board: 'Leaderboard', tab_suggest: 'Suggest', tab_account: 'Account', tabs_aria: 'Sections',
   what_drink: 'What are you drinking?', pick_aria: 'Choose a drink', pick_hint: 'Pick a drink.', add: 'Log it',
+  search_ph: 'Search drinks', search_none: 'Nothing found. Feel free to send us a suggestion.',
   kinds_aria: 'Type of drink', kind_beer: 'Beer', kind_wine: 'Wine', kind_spirit: 'Spirits', kind_mixed: 'Mixed',
   today_h: 'Drunk today', count_one: 'drink', count_many: 'drinks', progress_aria: 'Share of your limit in percent',
   day_sum: 'Today in total: {g} g of pure alcohol',
@@ -220,6 +222,12 @@ const DRINK_EN = { 'pils': 'Pilsner', 'helles': 'Helles lager', 'weizenbier': 'W
   'weißwein': 'White wine', 'rotwein': 'Red wine', 'weinschorle': 'Wine spritzer', 'sekt': 'Sparkling wine', 'glühwein': 'Mulled wine',
   'kräuterlikör': 'Herbal liqueur', 'obstler': 'Fruit brandy', 'pfefferminzlikör': 'Peppermint liqueur', 'sahnelikör': 'Cream liqueur',
   'zitronenlimo': 'Lemonade', 'orangenlimo': 'Orange soda', 'orangensaft': 'Orange juice', 'apfelsaft': 'Apple juice', 'maracujasaft': 'Passion fruit juice',
+  'kellerbier': 'Cellar beer', 'schwarzbier': 'Black lager', 'festbier': 'Festival beer', 'bockbier': 'Bock beer', 'mexikanisches lager': 'Mexican lager', 'colabier': 'Cola beer',
+  'biermischgetränk': 'Beer mix', 'apfelwein': 'Apple wine', 'champagner': 'Champagne', 'federweißer': 'Young wine', 'met': 'Mead', 'wermut': 'Vermouth', 'portwein': 'Port',
+  'weinbrand': 'Brandy', 'doppelkorn': 'Double korn', 'williamsbirne': 'Pear brandy', 'kirschwasser': 'Cherry brandy', 'zwetschgenwasser': 'Plum brandy', 'haselnussschnaps': 'Hazelnut schnapps',
+  'absinth': 'Absinthe', 'orangenlikör': 'Orange liqueur', 'bitterlikör': 'Bitter liqueur', 'kokoslikör': 'Coconut liqueur', 'kaffeelikör': 'Coffee liqueur', 'eierlikör': 'Egg liqueur',
+  'feigenlikör': 'Fig liqueur', 'apfelkorn': 'Apple korn', 'pfirsichlikör': 'Peach liqueur', 'saurer apfel': 'Sour apple', 'aperitif-bitter': 'Aperitif bitter', 'bowle': 'Punch',
+  'longdrink aus der dose': 'Canned long drink',
   'cranberrysaft': 'Cranberry juice', 'eistee': 'Iced tea', 'sprudelwasser': 'Sparkling water' };
 
 let LANG = 'de';
