@@ -13,8 +13,8 @@ Trag deine Getränke ein und sieh, wie viel Promille du ungefähr hast und wie n
 Alle Werte sind Schätzungen. Die App sagt nicht, ob man fahren darf.
 
 ## Technik
-Statische Seite (GitHub Pages) plus Supabase-Projekt `alkohol-rechner`. Adresse und öffentlicher Schlüssel stehen in `config.js`. Das Datenbank-Schema liegt als Migration `init_alkohol_rechner` im Supabase-Projekt, die Funktion `delete-account` unter Edge Functions. Regeln und Rechnung: siehe `DESIGN.md`.
+Statische Seite (GitHub Pages) im **selben Supabase-Projekt wie der Koffein Rechner** (`koffein-rechner`): gleiche Konten und Benutzernamen, eigene Tabellen und Funktionen mit dem Präfix `alc_` (Migration `alkohol_rechner_tables`). Adresse und öffentlicher Schlüssel stehen in `config.js`. Konto löschen nutzt die Funktion `delete-account` des Koffein Rechners und löscht das Konto in beiden Apps. Regeln und Rechnung: siehe `DESIGN.md`.
 
 ## Einrichten
 1. GitHub: Settings → Pages → Branch `main`, Ordner `/`.
-2. Supabase: Authentication → URL Configuration → Site URL und Redirect URL auf `https://monkeycoder2703.github.io/Alkohol_Rechner/` setzen.
+2. Supabase (Projekt `koffein-rechner`): Authentication → URL Configuration → unter Redirect URLs zusätzlich `https://monkeycoder2703.github.io/Alkohol_Rechner/` eintragen.

@@ -142,9 +142,11 @@ function show(loggedIn, name) {
   if (loggedIn) requestAnimationFrame(moveAll);
 }
 async function enter(user) {
-  const p = ok(await sb.from('profiles').select('username,weight_kg,sex,limit_pm').eq('id', user.id).single());
+  const p = ok(await sb.from('profiles').select('username').eq('id', user.id).single());
+  // Körperwerte stehen in alc_profiles; die Zeile gibt es erst, wenn man sie einmal speichert
+  const b = ok(await sb.from('alc_profiles').select('weight_kg,sex,limit_pm').eq('id', user.id).maybeSingle()) || {};
   state.username = p.username; state.bac = 0; state.recent = [];
-  state.body = { weight: p.weight_kg, sex: p.sex, limit: Number(p.limit_pm) || 0.5 }; show(true, p.username); renderBody();
+  state.body = { weight: b.weight_kg || null, sex: b.sex || null, limit: Number(b.limit_pm) || 0.5 }; show(true, p.username); renderBody();
   $('dash').classList.add('is-loading'); $('list').replaceChildren(h('li', { class: 'sk-row' }), h('li', { class: 'sk-row' }));
   await loadDrinks(); await refresh();
 }
@@ -299,7 +301,7 @@ $('body-form').onsubmit = async (e) => {
       const w = Number($('b-w').value), s = $('b-s').value, l = Number($('b-l').value);
       if (!Number.isInteger(w) || w < 30 || w > 250) throw new Error(t('e_weight'));
       if (!R[s]) throw new Error(t('e_sex'));
-      ok(await sb.rpc('set_body', { p_weight: w, p_sex: s, p_limit: l }));
+      ok(await sb.rpc('alc_set_body', { p_weight: w, p_sex: s, p_limit: l }));
       state.body = { weight: w, sex: s, limit: l }; $('body-dialog').close();
       renderBody(); renderSizes(false); renderMix(); renderSelection(); renderDash(null, true); toast(t('body_saved'));
     } catch (err) { msg('body-msg', err.message); }
@@ -358,7 +360,7 @@ $('lc-apply').onclick = async () => {
   if (!hasBody()) { $('lc-dialog').close(); openBody(); $('b-l').value = String(v); return; } // Gewicht fehlt noch: dort gleich mit eintragen
   await busy($('lc-apply'), async () => {
     try {
-      ok(await sb.rpc('set_body', { p_weight: state.body.weight, p_sex: state.body.sex, p_limit: v }));
+      ok(await sb.rpc('alc_set_body', { p_weight: state.body.weight, p_sex: state.body.sex, p_limit: v }));
       state.body.limit = v; $('lc-dialog').close(); $('b-l').value = String(v); renderBody(); renderSelection(); renderDash(null, true); toast(t('lc_saved', { v: fmtL(v) }));
     } catch (err) { msg('lc-msg', err.message); }
   });
@@ -372,8 +374,8 @@ const norm = (x) => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u
 const shown = () => { const q = norm($('drink-q').value.trim()); return q ? state.drinks.filter((d) => norm(d.name).includes(q) || norm(drinkName(d.name)).includes(q)) : state.drinks.filter((d) => d.kind === state.kind); };
 $('drink-q').oninput = () => { if (sel() && !shown().includes(sel())) { state.selected = null; state.amount = null; state.custom = false; state.mixer = null; } renderDrinks(); };
 async function loadDrinks() {
-  state.drinks = ok(await sb.from('drinks').select('id,name,abv,portion,sizes,kind').order('sort'));
-  state.mixers = ok(await sb.from('mixers').select('id,name').order('sort'));
+  state.drinks = ok(await sb.from('alc_drinks').select('id,name,abv,portion,sizes,kind').order('sort'));
+  state.mixers = ok(await sb.from('alc_mixers').select('id,name').order('sort'));
   state.selected = null; state.amount = null; state.custom = false; state.mixer = null; state.mixAmt = 200; state.mixCustom = false;
   renderKinds(); renderDrinks();
 }
@@ -498,7 +500,7 @@ function renderSelection() {
 }
 async function refresh(newest) {
   const since = new Date(Date.now() - 48 * 3600e3).toISOString(); // der Abend von gestern zählt noch mit
-  state.recent = ok(await sb.from('intakes').select('id,name,grams,amount,mixer,mixer_amount,ts').gte('ts', since).order('ts', { ascending: false }));
+  state.recent = ok(await sb.from('alc_intakes').select('id,name,grams,amount,mixer,mixer_amount,ts').gte('ts', since).order('ts', { ascending: false }));
   renderDash(newest, true);
 }
 function statusFor(bac, p, any) {
@@ -572,7 +574,7 @@ function renderDash(newest, animate) {
       h('span', { class: 'nm' }, label, h('small', { class: 'amt', text: i.mixer ? ` · ${i.amount} + ${i.mixer_amount} ml` : ` · ${i.amount} ml` })),
       h('span', { class: 'mg', text: fmtG(i.grams) + ' g' }), x);
     x.onclick = async () => {
-      try { ok(await sb.from('intakes').delete().eq('id', i.id)); li.classList.add('leaving'); await sleep(280); await refresh(); renderSelection(); toast(t('removed')); }
+      try { ok(await sb.from('alc_intakes').delete().eq('id', i.id)); li.classList.add('leaving'); await sleep(280); await refresh(); renderSelection(); toast(t('removed')); }
       catch (err) { toast(err.message, 'err'); }
     };
     ul.append(li);
@@ -582,7 +584,7 @@ $('add').onclick = async () => {
   const d = sel(), m = mixer(); if (!d || !state.amount || (m && !state.mixAmt) || !hasBody()) return;
   const btn = $('add'), amount = state.amount, g = gramsFor(d, amount); btn.disabled = true;
   try {
-    const id = ok(await sb.rpc('add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? state.mixAmt : null }));
+    const id = ok(await sb.rpc('alc_add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? state.mixAmt : null }));
     await playLoader(glassFor(d.name, d.kind, amount, m ? m.name : null, m ? state.mixAmt : null));
     await refresh(id);
     const r = $('cup').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * .35, `+${fmtG(g)} g`);
@@ -653,7 +655,7 @@ async function loadBoard() {
   const box = $('board'), token = ++loadBoard.n;
   box.replaceChildren(...[0, 1, 2, 3, 4].map(() => h('div', { class: 'sk-row' })));
   let rows;
-  try { rows = ok(await sb.rpc('leaderboard', { p_period: state.period })); }
+  try { rows = ok(await sb.rpc('alc_leaderboard', { p_period: state.period })); }
   catch (err) {
     if (token === loadBoard.n) box.replaceChildren(h('div', { class: 'empty' }, h('h3', { text: t('board_err') }), h('p', { text: err.message }),
       h('button', { class: 'btn ghost', type: 'button', onclick: loadBoard }, h('span', { text: t('retry') }))));
@@ -700,7 +702,7 @@ $('sg-form').onsubmit = async (e) => {
       const abv = $('sg-abv').value === '' ? null : Number($('sg-abv').value);
       if ($('sg-name').value.trim().length < 2) throw new Error(t('e_sg_name'));
       if (abv !== null && !(abv >= 0 && abv <= 80)) throw new Error(t('e_sg_abv'));
-      ok(await sb.rpc('suggest_drink', { p_name: $('sg-name').value, p_portion: $('sg-portion').value, p_abv: abv }));
+      ok(await sb.rpc('alc_suggest_drink', { p_name: $('sg-name').value, p_portion: $('sg-portion').value, p_abv: abv }));
       msg('sg-msg'); e.target.reset(); toast(t('sg_ok'));
     }
     catch (err) { msg('sg-msg', err.message); }

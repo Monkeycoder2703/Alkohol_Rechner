@@ -28,13 +28,13 @@ Schrift, Abstände, Eckenradius, Icons, CSP und Zustände wie im Koffein Rechner
 - Abbau: 0,15 ‰ pro Stunde. Für „wieder nüchtern“ vorsichtiger: 0,1 ‰ pro Stunde.
 - Kein Resorptionsabzug, damit der Wert eher zu hoch als zu niedrig ist.
 - Ein „Tag“ geht von 6 bis 6 Uhr, damit ein Abend nicht um Mitternacht zerschnitten wird.
-- **Der Server rechnet die Gramm** (`add_intake`), der Browser schickt nur Getränk, Menge und Mixer. Die Rangliste rechnet in `bac_stats` genauso wie der Browser.
+- **Der Server rechnet die Gramm** (`alc_add_intake`), der Browser schickt nur Getränk, Menge und Mixer. Die Rangliste rechnet in `alc_bac_stats` genauso wie der Browser.
 
 ## Mischgetränk
 Nach Getränk und Menge kommt optional „Womit mischst du?“: Pur oder ein Mixer mit 100/200/300 ml oder eigener Menge. Der Mixer ändert die Alkoholmenge nicht, nur Name, Glasgröße und die angezeigte Stärke der Mischung.
 
 ## Deine Werte
-Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen im Profil und sind nur für die Person selbst lesbar (RLS). Ohne Werte kann man nichts eintragen.
+Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen in `alc_profiles` und sind nur für die Person selbst lesbar (RLS). Ohne Werte kann man nichts eintragen.
 
 ## Sprachen
 `i18n.js` enthält alle Texte in Deutsch und Englisch. Neue Texte immer in beiden Sprachen eintragen.
@@ -45,3 +45,6 @@ Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen im Profil
 
 ## Gläser
 `glasses.js`: Der Becher auf der Startseite zeigt das Glas des zuletzt eingetragenen Getränks in dessen Farbe (Halbe als Glaskrug mit Henkel und Noppen, Maß ab 0,9 l Bier, Weizen, Pilstulpe, Stange, Pint, Wein, Rotwein-/Spritzkelch, Sektflöte, Glühweintasse, Stamperl, Tumbler, Longdrink mit Strohhalm, Cocktailschale). Bier hat eine Schaumkrone, Longdrinks und Spritz haben Eis. Ohne Getränk steht eine Halbe da.
+
+## Konto
+Der Alkohol Rechner nutzt das Supabase-Projekt des Koffein Rechners: ein Konto, ein Benutzername für beide Apps. Alle Alkohol-Daten liegen in eigenen Tabellen mit Präfix `alc_`; an den Koffein-Tabellen wird nichts geändert. Konto löschen löscht in beiden Apps.
