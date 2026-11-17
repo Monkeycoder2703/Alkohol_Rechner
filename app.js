@@ -288,6 +288,64 @@ $('body-form').onsubmit = async (e) => {
   });
 };
 
+/* ---------- Limit-Check: ein paar Fragen, daraus ein vorsichtiger Vorschlag (höchstens 0,5 Promille) ---------- */
+// Wer fährt oder aus gesundheitlichen Gründen nicht trinken sollte, bekommt keinen Wert, sondern "heute besser nichts".
+const LC = [
+  { k: 'drive', stop: true, o: [['yes', null], ['no', 0]] },
+  { k: 'health', stop: true, o: [['yes', null], ['no', 0]] },
+  { k: 'often', o: [['rare', 0.3], ['some', 0.4], ['much', 0.5]] },
+  { k: 'after', o: [['good', 0], ['mid', -0.1], ['bad', -0.2]] },
+  { k: 'tomorrow', o: [['free', 0], ['busy', -0.1]] }
+];
+const lc = { i: 0, base: 0.5, adj: 0, result: null };
+function lcShow() {
+  const q = LC[lc.i], box = $('lc-opts'); msg('lc-msg'); box.replaceChildren(); $('lc-list').hidden = true; $('lc-apply').hidden = true;
+  if (!q) return lcResult(Math.round(Math.min(0.5, Math.max(0.2, lc.base + lc.adj)) * 10) / 10);
+  $('lc-step').textContent = t('lc_step', { n: lc.i + 1, of: LC.length });
+  $('lc-dlg-title').textContent = t('lc_q_' + q.k); $('lc-text').textContent = t('lc_h_' + q.k);
+  q.o.forEach(([key, val]) => {
+    const b = h('button', { class: 'chip-opt', type: 'button' }, h('span', { text: t(`lc_${q.k}_${key}`) }));
+    b.onclick = () => {
+      if (val === null) return lcResult(null, q.k);
+      if (q.k === 'often') lc.base = val; else lc.adj += val;
+      lc.i++; lcShow();
+    };
+    box.append(b);
+  });
+}
+function lcResult(v, why) {
+  lc.result = v; $('lc-opts').replaceChildren(); $('lc-step').textContent = t('lc_result');
+  const list = $('lc-list'); list.replaceChildren(); list.hidden = false;
+  if (v === null) {
+    $('lc-dlg-title').textContent = t('lc_zero_t'); $('lc-text').textContent = t('lc_zero_' + why);
+    list.append(h('li', { text: t('lc_tip_zero') }));
+    $('lc-apply').hidden = true; return;
+  }
+  $('lc-dlg-title').replaceChildren(h('span', { class: 'lc-big', text: fmtL(v) + ' ‰' })); $('lc-text').textContent = t('lc_res_text');
+  if (hasBody()) { // was der Wert ungefähr bedeutet: kleine Bier (0,33 l, 4,9 %) kurz hintereinander
+    const beers = v * factor() / (330 * 0.049 * RHO);
+    list.append(h('li', { text: t('lc_res_beer', { n: nf(Math.max(0.5, Math.round(beers * 2) / 2), 0, 1) }) }));
+  }
+  [t('lc_tip_slow'), t('lc_tip_water'), t('lc_tip_feel')].forEach((x) => list.append(h('li', { text: x })));
+  $('lc-apply-t').textContent = t('lc_apply', { v: fmtL(v) }); $('lc-apply').hidden = false;
+}
+function openLC() {
+  if ($('body-dialog').open) $('body-dialog').close();
+  lc.i = 0; lc.base = 0.5; lc.adj = 0; lc.result = null; lcShow(); $('lc-dialog').showModal();
+}
+$('lc-open').onclick = openLC; $('lc-open2').onclick = openLC;
+$('lc-close').onclick = () => $('lc-dialog').close();
+$('lc-apply').onclick = async () => {
+  const v = lc.result; if (!v) return;
+  if (!hasBody()) { $('lc-dialog').close(); openBody(); $('b-l').value = String(v); return; } // Gewicht fehlt noch: dort gleich mit eintragen
+  await busy($('lc-apply'), async () => {
+    try {
+      ok(await sb.rpc('set_body', { p_weight: state.body.weight, p_sex: state.body.sex, p_limit: v }));
+      state.body.limit = v; $('lc-dialog').close(); $('b-l').value = String(v); renderBody(); renderSelection(); renderDash(null, true); toast(t('lc_saved', { v: fmtL(v) }));
+    } catch (err) { msg('lc-msg', err.message); }
+  });
+};
+
 /* ---------- Dashboard: Getränk, Menge, Mixer ---------- */
 const sel = () => state.drinks.find((x) => x.id === state.selected);
 const mixer = () => (state.mixer == null ? null : state.mixers.find((x) => x.id === state.mixer) || null);

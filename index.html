@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-title" content="Alkohol">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=20261117b">
+<link rel="stylesheet" href="style.css?v=20261117d">
 </head>
 <body class="booting">
 
@@ -244,6 +244,10 @@
       <p class="sub" id="body-sum"></p>
       <button id="body-edit" class="btn ghost block" type="button"><svg class="ico"><use href="#i-user"/></svg><span data-i18n="body_edit"></span></button>
       <hr class="div">
+      <h3 data-i18n="lc_title"></h3>
+      <p class="sub" data-i18n="lc_sub"></p>
+      <button id="lc-open" class="btn block" type="button"><svg class="ico"><use href="#i-bulb"/></svg><span data-i18n="lc_open"></span></button>
+      <hr class="div">
       <div class="help">
         <h3 data-i18n="help_title"></h3>
         <p class="sub" data-i18n="help_text"></p>
@@ -284,13 +288,29 @@
     <div class="field"><label for="b-s" data-i18n="body_s"></label>
       <select id="b-s"><option value="" data-i18n="body_s_pick"></option><option value="f" data-i18n="body_s_f"></option><option value="m" data-i18n="body_s_m"></option><option value="x" data-i18n="body_s_x"></option></select>
       <small data-i18n="body_s_hint"></small></div>
-    <div class="field"><label for="b-l" data-i18n="body_l"></label><select id="b-l"></select><small data-i18n="body_l_hint"></small></div>
+    <div class="field"><label for="b-l" data-i18n="body_l"></label><select id="b-l"></select><small data-i18n="body_l_hint"></small>
+      <button id="lc-open2" class="link" type="button" data-i18n="lc_link"></button></div>
     <p id="body-msg" class="msg" role="alert"></p>
     <div class="row">
       <button type="button" id="body-cancel" class="btn ghost"><span data-i18n="cancel"></span></button>
       <button type="submit" class="btn"><span data-i18n="body_save"></span></button>
     </div>
   </form>
+</dialog>
+
+<dialog id="lc-dialog" aria-labelledby="lc-dlg-title">
+  <div class="lc">
+    <p class="lc-step" id="lc-step"></p>
+    <h3 id="lc-dlg-title"></h3>
+    <p id="lc-text"></p>
+    <div class="lc-opts" id="lc-opts"></div>
+    <ul class="lc-list" id="lc-list" hidden></ul>
+    <p id="lc-msg" class="msg" role="alert"></p>
+    <div class="row">
+      <button type="button" id="lc-close" class="btn ghost"><span data-i18n="lc_close"></span></button>
+      <button type="button" id="lc-apply" class="btn" hidden><span id="lc-apply-t"></span></button>
+    </div>
+  </div>
 </dialog>
 
 <dialog id="chaos-dialog" aria-labelledby="chaos-title">
@@ -324,12 +344,12 @@
 <div id="eq" aria-hidden="true"></div>
 
 <script src="supabase.js"></script>
-<script src="config.js?v=20261117b"></script>
-<script src="i18n.js?v=20261117b"></script>
-<script src="chaos.js?v=20261117b"></script>
-<script src="water.js?v=20261117b"></script>
-<script src="ui.js?v=20261117b"></script>
-<script src="pwa.js?v=20261117b"></script>
-<script src="app.js?v=20261117b"></script>
+<script src="config.js?v=20261117d"></script>
+<script src="i18n.js?v=20261117d"></script>
+<script src="chaos.js?v=20261117d"></script>
+<script src="water.js?v=20261117d"></script>
+<script src="ui.js?v=20261117d"></script>
+<script src="pwa.js?v=20261117d"></script>
+<script src="app.js?v=20261117d"></script>
 </body>
 </html>
