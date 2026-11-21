@@ -18,3 +18,6 @@ Statische Seite (GitHub Pages) im **selben Supabase-Projekt wie der Koffein Rech
 ## Einrichten
 1. GitHub: Settings → Pages → Branch `main`, Ordner `/`.
 2. Supabase (Projekt `koffein-rechner`): Authentication → URL Configuration → unter Redirect URLs zusätzlich `https://monkeycoder2703.github.io/Alkohol_Rechner/` eintragen.
+
+## Koffein automatisch eintragen
+Getränke und Mixer mit Koffein (z. B. Cuba Libre, Espresso Martini, Cola, Energy Drink als Mixer) haben in `alc_drinks` / `alc_mixers` die Spalte `caffeine_mg_100` (mg pro 100 ml). Beim Eintragen legt `alc_add_intake` dazu automatisch einen Eintrag im Koffein Rechner (`intakes`) an. Wird der Alkohol-Eintrag gelöscht, wird der Koffein-Eintrag über einen Trigger mit gelöscht (Migration `alc_caffeine_sync`).

@@ -374,8 +374,8 @@ const norm = (x) => String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u
 const shown = () => { const q = norm($('drink-q').value.trim()); return q ? state.drinks.filter((d) => norm(d.name).includes(q) || norm(drinkName(d.name)).includes(q)) : state.drinks.filter((d) => d.kind === state.kind); };
 $('drink-q').oninput = () => { if (sel() && !shown().includes(sel())) { state.selected = null; state.amount = null; state.custom = false; state.mixer = null; } renderDrinks(); };
 async function loadDrinks() {
-  state.drinks = ok(await sb.from('alc_drinks').select('id,name,abv,portion,sizes,kind').order('sort'));
-  state.mixers = ok(await sb.from('alc_mixers').select('id,name').order('sort'));
+  state.drinks = ok(await sb.from('alc_drinks').select('id,name,abv,portion,sizes,kind,caffeine_mg_100').order('sort'));
+  state.mixers = ok(await sb.from('alc_mixers').select('id,name,caffeine_mg_100').order('sort'));
   state.selected = null; state.amount = null; state.custom = false; state.mixer = null; state.mixAmt = 200; state.mixCustom = false;
   renderKinds(); renderDrinks();
 }
@@ -483,6 +483,8 @@ function renderMixAmounts() {
     set: (a, c) => { state.mixAmt = a; state.mixCustom = c; renderSelection(); }
   });
 }
+// Koffein (mg) dieses Getränks samt Mixer – wird automatisch im Koffein Rechner eingetragen
+const cafFor = (d, amount, m, mixAmt) => Math.round(amount * Number(d.caffeine_mg_100 || 0) / 100) + (m ? Math.round(mixAmt * Number(m.caffeine_mg_100 || 0) / 100) : 0);
 function renderSelection() {
   const d = sel(), m = mixer(), sum = $('preview'); sum.replaceChildren();
   const okAmt = !!(d && state.amount && (!m || state.mixAmt));
@@ -493,6 +495,8 @@ function renderSelection() {
     const parts = [m ? `${state.amount} ml + ${state.mixAmt} ml` : `${state.amount} ml`, t('sum_g', { g: fmtG(g) })];
     if (hasBody()) parts.push(`+${fmtP(add)} ‰`);
     sum.append(h('b', { text: m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name) }), h('small', { text: parts.join(' · ') }));
+    const caf = cafFor(d, state.amount, m, state.mixAmt);
+    if (caf > 0) sum.append(h('small', { class: 'caf', text: t('sum_caf', { mg: caf }) }));
     if (!hasBody()) sum.append(h('small', { class: 'need', text: t('need_body') }));
     else if (bacNow(state.recent || [], Date.now(), ELIM) + add > limit() + EPS) sum.append(h('small', { class: 'warnline', text: t('sum_over') }));
   }
@@ -588,7 +592,8 @@ $('add').onclick = async () => {
     await playLoader(glassFor(d.name, d.kind, amount, m ? m.name : null, m ? state.mixAmt : null));
     await refresh(id);
     const r = $('cup').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * .35, `+${fmtG(g)} g`);
-    toast(t('added', { name: m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name) }));
+    const caf = cafFor(d, amount, m, state.mixAmt), nm = m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name);
+    toast(caf > 0 ? t('added_caf', { name: nm, mg: caf }) : t('added', { name: nm }));
   } catch (err) { $('loader').classList.remove('on'); toast(err.message, 'err'); }
   finally { renderSelection(); }
 };
