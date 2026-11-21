@@ -523,3 +523,10 @@ html.reduce #bg .fb{animation:none;opacity:var(--o,.5);bottom:var(--y,50%)}
 .cup-svg .dimples{fill:rgba(255,255,255,.07);stroke:rgba(255,255,255,.42);stroke-width:2}
 
 #preview .caf{color:var(--volt);font-weight:700}
+/* Mischverhältnis */
+#ratio-grid .chip-opt{flex-direction:column;gap:2px;min-width:72px;padding:var(--s2) var(--s3)}
+#ratio-grid .chip-opt>span:first-child{font-size:1.1rem;font-weight:800}
+#ratio-grid .r-sub{font-size:.75rem;color:var(--mute);font-weight:600}
+#ratio-grid .tag{font-size:.65rem}
+.mix-how{margin-top:var(--s3);font-weight:700;color:var(--honey)}
+#ratio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr))}#ratio-grid .chip-opt{min-width:0;padding-inline:var(--s1)}

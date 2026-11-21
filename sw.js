@@ -2,7 +2,7 @@
 /* Service Worker: macht die Seite als App startbar. Netzwerk zuerst (immer aktuell), bei fehlendem Netz kommt die gespeicherte Version.
    Supabase und alles Fremde bleibt unberührt, es wird nur die eigene Seite gespeichert.
    Aufgeräumt werden nur eigene alte Speicher (alkohol-…), damit andere Seiten auf derselben Adresse nichts verlieren. */
-const CACHE = 'alkohol-v14';
+const CACHE = 'alkohol-v15';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'i18n.js', 'toasts.js', 'liquid.js', 'glasses.js', 'ui.js', 'pwa.js', 'supabase.js', 'config.js',
   'favicon.svg', 'manifest.webmanifest', 'fonts/bricolage-grotesque-latin-wght-normal.woff2', 'icons/icon-192.png', 'icons/icon-512.png'];
 self.addEventListener('install', (e) => {

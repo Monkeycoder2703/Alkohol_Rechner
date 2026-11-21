@@ -31,7 +31,7 @@ Schrift, Abstände, Eckenradius, Icons, CSP und Zustände wie im Koffein Rechner
 - **Der Server rechnet die Gramm** (`alc_add_intake`), der Browser schickt nur Getränk, Menge und Mixer. Die Rangliste rechnet in `alc_bac_stats` genauso wie der Browser.
 
 ## Mischgetränk
-Nach Getränk und Menge kommt optional „Womit mischst du?“: Pur oder ein Mixer mit 100/200/300 ml oder eigener Menge. Der Mixer ändert die Alkoholmenge nicht, nur Name, Glasgröße und die angezeigte Stärke der Mischung.
+Reihenfolge: Getränk → „Womit mischst du?“ (Pur oder Mixer) → Größe → bei Mixer das Mischverhältnis. Mit Mixer ist die gewählte Größe das **ganze Glas**; das Verhältnis (Alkohol : Mixer) teilt es auf, z. B. 200 ml Vodka-Cola bei 1:4 = 4 cl Vodka + 16 cl Cola. Übliche Verhältnisse: Schnaps 1:4 (Likör unter 25 % 1:3), Bier und Wein 1:1, bekannte Klassiker eigene (Gin Tonic, Cuba Libre 1:3 …). Wählbar sind 1:2 bis 1:5 bzw. 2:1 bis 1:2. Die App zeigt „So wird’s gemischt: …“. Der Server bekommt beide Mengen getrennt.
 
 ## Deine Werte
 Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen in `alc_profiles` und sind nur für die Person selbst lesbar (RLS). Ohne Werte kann man nichts eintragen.

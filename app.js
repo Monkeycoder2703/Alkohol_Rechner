@@ -5,7 +5,7 @@ const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANO
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const state = { mode: 'login', period: 'day', drinks: [], mixers: [], kind: 'beer', selected: null, recent: [], rows: null, bac: 0, username: '', cupReady: false,
-  loggedIn: false, tab: 'dash', amount: null, custom: false, mixer: null, mixAmt: 200, mixCustom: false, body: { weight: null, sex: null, limit: 0.5 } };
+  loggedIn: false, tab: 'dash', amount: null, custom: false, mixer: null, ratio: null, body: { weight: null, sex: null, limit: 0.5 } };
 const recovery = location.hash.includes('type=recovery'); // Link aus der "Passwort vergessen"-Mail
 const locale = () => (LANG === 'en' ? 'en-GB' : 'de-DE');
 
@@ -376,7 +376,7 @@ $('drink-q').oninput = () => { if (sel() && !shown().includes(sel())) { state.se
 async function loadDrinks() {
   state.drinks = ok(await sb.from('alc_drinks').select('id,name,abv,portion,sizes,kind,caffeine_mg_100').order('sort'));
   state.mixers = ok(await sb.from('alc_mixers').select('id,name,caffeine_mg_100').order('sort'));
-  state.selected = null; state.amount = null; state.custom = false; state.mixer = null; state.mixAmt = 200; state.mixCustom = false;
+  state.selected = null; state.amount = null; state.custom = false; state.mixer = null; state.ratio = null;
   renderKinds(); renderDrinks();
 }
 function renderKinds() {
@@ -412,7 +412,7 @@ function renderDrinks() {
 }
 const validAmount = (v) => Number.isInteger(v) && v >= 1 && v <= 2000;
 function pick(id, focus) {
-  state.selected = id; const d = sel(); state.amount = d ? d.portion : null; state.custom = false;
+  state.selected = id; resetAmount(); // ein gewählter Mixer bleibt beim Wechsel des Getränks
   const list = shown();
   $('drinks').querySelectorAll('.drink').forEach((tile, i) => {
     const on = list[i].id === id; tile.setAttribute('aria-checked', String(on)); tile.tabIndex = on ? 0 : -1; if (on && focus) tile.focus();
@@ -449,53 +449,88 @@ function amountGrid(grid, o) {
   inp.oninput = read; inp.onfocus = () => { if (inp.value !== '') read(); };
   grid.append(cust); mark();
 }
+/* Mischgetränk: Mit Mixer ist die gewählte Größe das ganze Glas. Das Mischverhältnis (Alkohol : Mixer) teilt es auf.
+   Für jede Art gibt es ein übliches Verhältnis, für bekannte Klassiker ein eigenes; man kann es ändern. */
+const MIX_RATIOS = { spirit: ['1:2', '1:3', '1:4', '1:5'], beer: ['2:1', '1:1', '1:2'], wine: ['2:1', '1:1', '1:2'], mixed: ['2:1', '1:1', '1:2'] };
+const MIX_SIZES = { spirit: [200, 300, 400], beer: [330, 500, 1000], wine: [200, 250, 500], mixed: [200, 300, 400] };
+const MIX_SIZE_STD = { spirit: 200, beer: 500, wine: 250, mixed: 300 };
+const MIX_KNOWN = { // Getränk|Mixer -> übliches Verhältnis
+  'gin|tonic water': '1:3', 'gin|bitter lemon': '1:3', 'rum|cola': '1:3', 'rum|cola zero': '1:3', 'whisky|cola': '1:3', 'whisky|cola zero': '1:3', 'bourbon|cola': '1:3',
+  'bourbon|ginger ale': '1:3', 'whisky|ginger ale': '1:3', 'vodka|ginger beer': '1:3', 'vodka|orangensaft': '1:3', 'vodka|cranberrysaft': '1:3', 'tequila|orangensaft': '1:3',
+  'weißwein|sprudelwasser': '1:1', 'rotwein|cola': '1:1', 'sekt|orangensaft': '1:1', 'prosecco|orangensaft': '1:1', 'pils|zitronenlimo': '1:1', 'helles|zitronenlimo': '1:1', 'weizenbier|zitronenlimo': '1:1'
+};
+const mixStd = (d, m) => MIX_KNOWN[`${d.name}|${m.name}`.toLowerCase()] || (d.kind === 'spirit' && Number(d.abv) < 25 ? '1:3' : ({ spirit: '1:4', beer: '1:1', wine: '1:1', mixed: '1:1' })[d.kind] || '1:1');
+const mixRatio = (d, m) => state.ratio || mixStd(d, m);
+// Glas aufteilen: wie viel ml Getränk, wie viel ml Mixer
+function split(total, d, m) {
+  const [a, b] = mixRatio(d, m).split(':').map(Number), alc = Math.round(total * a / (a + b));
+  return { alc, mix: total - alc };
+}
+const vol = (ml) => (ml <= 100 ? `${nf(ml / 10, 0, 1)} cl` : `${ml} ml`);
 function renderSizes(animate) {
-  const d = sel(), box = $('sizes'); box.hidden = !d; if (!d) return;
-  $('size-name').textContent = drinkName(d.name);
-  amountGrid($('size-grid'), {
+  const d = sel(), m = mixer(), box = $('sizes'); box.hidden = !d; if (!d) return;
+  $('size-name').textContent = m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name);
+  $('size-h').textContent = t(m ? 'size_h_mix' : 'size_h');
+  amountGrid($('size-grid'), m ? {
+    amounts: MIX_SIZES[d.kind] || MIX_SIZES.mixed, std: MIX_SIZE_STD[d.kind] || 300, icon: 'soda', get: () => ({ amount: state.amount, custom: state.custom }),
+    sub: (a) => { const s = split(a, d, m); return `${vol(s.alc)} ${drinkName(d.name)} · ≈ ${fmtG(gramsFor(d, s.alc))} g`; },
+    set: (a, c) => { state.amount = a; state.custom = c; renderRatio(); renderSelection(); }
+  } : {
     amounts: d.sizes, std: d.portion, icon: KIND_ICON[d.kind], get: () => ({ amount: state.amount, custom: state.custom }),
     sub: (a) => `≈ ${fmtG(gramsFor(d, a))} g` + (d.kind === 'spirit' && a % 10 === 0 ? ` · ${a / 10} cl` : ''),
-    set: (a, c) => { state.amount = a; state.custom = c; renderMixAmounts(); renderSelection(); }
+    set: (a, c) => { state.amount = a; state.custom = c; renderSelection(); }
   });
   if (animate) { box.classList.remove('in'); void box.offsetWidth; box.classList.add('in'); }
 }
-/* Mischgetränk: nach der Getränkewahl optional einen Mixer dazu. Der Mixer ändert die Alkoholmenge nicht, nur Name, Glasgröße und Stärke. */
+// Ohne Mixer die normale Portion, mit Mixer die übliche Glasgröße für die Art
+function resetAmount() {
+  const d = sel(); state.custom = false; state.ratio = null;
+  state.amount = !d ? null : mixer() ? (MIX_SIZE_STD[d.kind] || 300) : d.portion;
+}
 function renderMix() {
-  const d = sel(), box = $('mixbox'); box.hidden = !d; if (!d) return;
+  const d = sel(), box = $('mixbox'); box.hidden = !d; if (!d) { $('ratiobox').hidden = true; return; }
   const grid = $('mix-grid'); grid.replaceChildren();
   const chip = (id, label, icon) => {
     const b = h('button', { class: 'chip-opt', type: 'button', role: 'radio', 'aria-checked': String(state.mixer === id) }, ico(icon), h('span', { text: label }));
     b.onclick = () => {
+      if (state.mixer === id) return;
       state.mixer = id; grid.querySelectorAll('.chip-opt').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
-      renderMixAmounts(); renderSelection();
+      resetAmount(); renderSizes(true); renderRatio(); renderSelection();
     };
     grid.append(b);
   };
   chip(null, t('mix_none'), KIND_ICON[d.kind]);
   state.mixers.forEach((m) => chip(m.id, mixName(m.name), 'soda'));
-  renderMixAmounts();
+  renderRatio();
 }
-function renderMixAmounts() {
-  const d = sel(), m = mixer(), grid = $('mixamt-grid'); grid.hidden = !d || !m; if (!d || !m) return;
-  amountGrid(grid, {
-    amounts: [100, 200, 300], std: 200, icon: 'soda', get: () => ({ amount: state.mixAmt, custom: state.mixCustom }),
-    sub: (a) => (state.amount ? t('mix_strength', { p: nf(d.abv * state.amount / (state.amount + a), 0, 1) }) : ''),
-    set: (a, c) => { state.mixAmt = a; state.mixCustom = c; renderSelection(); }
+function renderRatio() {
+  const d = sel(), m = mixer(), box = $('ratiobox'); box.hidden = !d || !m; if (!d || !m) return;
+  const std = mixStd(d, m), cur = mixRatio(d, m), grid = $('ratio-grid'); grid.replaceChildren();
+  $('ratio-usual').textContent = t('ratio_usual', { r: std });
+  (MIX_RATIOS[d.kind] || MIX_RATIOS.mixed).forEach((r) => {
+    const [a, b] = r.split(':').map(Number);
+    const chip = h('button', { class: 'chip-opt', type: 'button', role: 'radio', 'aria-checked': String(r === cur) },
+      h('span', { text: r }), h('small', { class: 'r-sub', text: `≈ ${nf(d.abv * a / (a + b), 0, 1)} % vol` }), r === std ? h('span', { class: 'tag', text: t('ratio_std') }) : null);
+    chip.onclick = () => { state.ratio = r; renderSizes(false); renderRatio(); renderSelection(); };
+    grid.append(chip);
   });
+  const s = state.amount ? split(state.amount, d, m) : null;
+  $('mix-how').textContent = s && s.alc >= 1 ? t('mix_how', { a: vol(s.alc), d: drinkName(d.name), b: vol(s.mix), m: mixName(m.name) }) : '';
 }
 // Koffein (mg) dieses Getränks samt Mixer – wird automatisch im Koffein Rechner eingetragen
 const cafFor = (d, amount, m, mixAmt) => Math.round(amount * Number(d.caffeine_mg_100 || 0) / 100) + (m ? Math.round(mixAmt * Number(m.caffeine_mg_100 || 0) / 100) : 0);
 function renderSelection() {
   const d = sel(), m = mixer(), sum = $('preview'); sum.replaceChildren();
-  const okAmt = !!(d && state.amount && (!m || state.mixAmt));
+  const s = d && m && state.amount ? split(state.amount, d, m) : null, alc = m ? (s ? s.alc : 0) : state.amount;
+  const okAmt = !!(d && state.amount && alc >= 1);
   if (!d) sum.textContent = t('pick_hint');
   else if (!okAmt) sum.append(h('b', { text: drinkName(d.name) }), h('small', { text: t('amount_invalid') }));
   else {
-    const g = gramsFor(d, state.amount), add = g / factor();
-    const parts = [m ? `${state.amount} ml + ${state.mixAmt} ml` : `${state.amount} ml`, t('sum_g', { g: fmtG(g) })];
+    const g = gramsFor(d, alc), add = g / factor();
+    const parts = [m ? `${vol(s.alc)} + ${vol(s.mix)}` : `${state.amount} ml`, t('sum_g', { g: fmtG(g) })];
     if (hasBody()) parts.push(`+${fmtP(add)} ‰`);
     sum.append(h('b', { text: m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name) }), h('small', { text: parts.join(' · ') }));
-    const caf = cafFor(d, state.amount, m, state.mixAmt);
+    const caf = cafFor(d, alc, m, s ? s.mix : 0); // Koffein aus dem Getränk und aus der Mixer-Menge des Glases
     if (caf > 0) sum.append(h('small', { class: 'caf', text: t('sum_caf', { mg: caf }) }));
     if (!hasBody()) sum.append(h('small', { class: 'need', text: t('need_body') }));
     else if (bacNow(state.recent || [], Date.now(), ELIM) + add > limit() + EPS) sum.append(h('small', { class: 'warnline', text: t('sum_over') }));
@@ -585,14 +620,16 @@ function renderDash(newest, animate) {
   });
 }
 $('add').onclick = async () => {
-  const d = sel(), m = mixer(); if (!d || !state.amount || (m && !state.mixAmt) || !hasBody()) return;
-  const btn = $('add'), amount = state.amount, g = gramsFor(d, amount); btn.disabled = true;
+  const d = sel(), m = mixer(); if (!d || !state.amount || !hasBody()) return;
+  // mit Mixer: gewählte Größe = ganzes Glas, aufgeteilt nach dem Mischverhältnis
+  const s = m ? split(state.amount, d, m) : { alc: state.amount, mix: null }; if (s.alc < 1) return;
+  const btn = $('add'), amount = s.alc, g = gramsFor(d, amount); btn.disabled = true;
   try {
-    const id = ok(await sb.rpc('alc_add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? state.mixAmt : null }));
-    await playLoader(glassFor(d.name, d.kind, amount, m ? m.name : null, m ? state.mixAmt : null));
+    const id = ok(await sb.rpc('alc_add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? s.mix : null }));
+    await playLoader(glassFor(d.name, d.kind, amount, m ? m.name : null, m ? s.mix : null));
     await refresh(id);
     const r = $('cup').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * .35, `+${fmtG(g)} g`);
-    const caf = cafFor(d, amount, m, state.mixAmt), nm = m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name);
+    const caf = cafFor(d, amount, m, s.mix), nm = m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name);
     toast(caf > 0 ? t('added_caf', { name: nm, mg: caf }) : t('added', { name: nm }));
   } catch (err) { $('loader').classList.remove('on'); toast(err.message, 'err'); }
   finally { renderSelection(); }
