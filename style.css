@@ -625,5 +625,4 @@ html{-webkit-tap-highlight-color:transparent}
 *{-webkit-tap-highlight-color:transparent}
 @media (hover:none) and (pointer:coarse){
   :focus,:focus-visible{outline:none!important}
-  button:focus,a:focus,[role="tab"]:focus,[role="radio"]:focus,label:focus-within{box-shadow:none}
 }
