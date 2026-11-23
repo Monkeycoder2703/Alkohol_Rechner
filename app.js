@@ -738,36 +738,37 @@ $('tc-copy').onclick = () => { if (tst.last) copyText(tst.last); };
 const prof = { n: 7, friends: [], busy: false, friend: null };
 const dayDate = (d) => new Date(d + 'T12:00:00');
 function recapStats(days) {
-  const g = days.reduce((s, x) => s + Number(x.g), 0), n = days.reduce((s, x) => s + x.n, 0);
-  return { g, n, free: days.filter((x) => x.n === 0).length, over: days.filter((x) => x.over).length };
+  const peak = Math.max(0, ...days.map((x) => Number(x.pm))), n = days.reduce((s, x) => s + x.n, 0);
+  return { peak, n, free: days.filter((x) => x.n === 0).length, over: days.filter((x) => x.over).length };
 }
-// Rückblick zeichnen: Kennzahlen, Balken je Tag, Lieblingsgetränke, letzte Getränke
+// Rückblick zeichnen: Kennzahlen, höchster Promillewert je Tag als Balken (mit Limit-Linie), Lieblingsgetränke, letzte Getränke
 function renderRecap(box, r, n) {
   box.replaceChildren();
-  const st = recapStats(r.days), max = Math.max(1, ...r.days.map((x) => Number(x.g)));
+  const st = recapStats(r.days), lim = Number(r.limit) || 0.5, max = Math.max(st.peak, lim) * 1.15;
   const tile = (v, label, cls) => h('div', { class: 'rc-tile' + (cls ? ' ' + cls : '') }, h('b', { text: v }), h('small', { text: label }));
   box.append(h('div', { class: 'rc-tiles' },
-    tile(fmtG(st.g) + ' g', t('rc_total')), tile(String(st.n), t(st.n === 1 ? 'rc_drink' : 'rc_drinks')),
+    tile(fmtP(st.peak) + ' ‰', t('rc_peak'), st.peak > lim + EPS ? 'bad' : ''), tile(String(st.n), t(st.n === 1 ? 'rc_drink' : 'rc_drinks')),
     tile(String(st.free), t('rc_free'), 'good'), tile(String(st.over), t('rc_over'), st.over ? 'bad' : '')));
   const bars = h('div', { class: 'rc-bars', role: 'img', 'aria-label': t('rc_chart_aria', { n }) });
-  bars.style.setProperty('--n', r.days.length);
+  bars.style.setProperty('--n', r.days.length); bars.style.setProperty('--lim', (lim / max).toFixed(3));
+  bars.append(h('i', { class: 'rc-limit', 'aria-hidden': 'true' }, h('span', { text: `${fmtL(lim)} ‰` })));
   r.days.forEach((x, i) => {
     const dt = dayDate(x.d), label = dt.toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'numeric' });
-    const bar = h('div', { class: 'rc-bar' + (x.over ? ' over' : '') + (x.n ? '' : ' zero'), title: `${label}: ${fmtG(x.g)} g · ${x.n} ${t(x.n === 1 ? 'rc_drink' : 'rc_drinks')}` });
-    bar.style.setProperty('--h', (Number(x.g) / max).toFixed(3)); bar.style.setProperty('--i', i);
+    const bar = h('div', { class: 'rc-bar' + (x.over ? ' over' : '') + (x.n ? '' : ' zero'), title: `${label}: ${t('rc_max', { p: fmtP(x.pm) })} · ${x.n} ${t(x.n === 1 ? 'rc_drink' : 'rc_drinks')}` });
+    bar.style.setProperty('--h', (Number(x.pm) / max).toFixed(3)); bar.style.setProperty('--i', i);
     const showLabel = r.days.length <= 7 || i % 5 === 0 || i === r.days.length - 1;
     bars.append(h('div', { class: 'rc-col' }, bar, h('small', { text: showLabel ? (r.days.length <= 7 ? dt.toLocaleDateString(locale(), { weekday: 'short' }) : String(dt.getDate())) : '' })));
   });
-  box.append(bars, h('p', { class: 'rc-legend' }, h('i', { class: 'lg ok' }), t('rc_lg_ok'), h('i', { class: 'lg over' }), t('rc_lg_over')));
+  box.append(bars, h('p', { class: 'rc-legend' }, h('i', { class: 'lg ok' }), t('rc_lg_ok'), h('i', { class: 'lg over' }), t('rc_lg_over'), h('i', { class: 'lg line' }), t('rc_lg_limit')));
   if (!st.n) { box.append(h('p', { class: 'rc-empty', text: t(r.rel === 'self' ? 'rc_empty_me' : 'rc_empty_fr', { n }) })); return; }
   const top = h('ol', { class: 'rc-top' });
-  r.top.forEach((x) => top.append(h('li', {}, h('span', { class: 'nm', text: drinkName(x.name) }), h('small', { text: `${x.n}× · ${fmtG(x.g)} g` }))));
+  r.top.forEach((x) => top.append(h('li', {}, h('span', { class: 'nm', text: drinkName(x.name) }), h('small', { text: `${x.n}×` }))));
   const rec = h('ul', { class: 'rc-recent' });
   r.recent.forEach((x) => {
     const dt = new Date(x.ts), when = `${dt.toLocaleDateString(locale(), { weekday: 'short' })} ${dt.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}`;
     rec.append(h('li', {}, h('span', { class: 'time', text: when }),
       h('span', { class: 'nm' }, x.mixer ? `${drinkName(x.name)} + ${mixName(x.mixer)}` : drinkName(x.name), h('small', { class: 'amt', text: x.mixer ? ` · ${x.amount} + ${x.mixer_amount} ml` : ` · ${x.amount} ml` })),
-      h('span', { class: 'mg', text: fmtG(x.g) + ' g' })));
+      h('span', { class: 'mg', text: `+${fmtP(x.pm)} ‰` })));
   });
   box.append(h('h4', { text: t('rc_top') }), top, h('h4', { text: t('rc_recent') }), rec);
 }
@@ -813,7 +814,7 @@ function renderFriends() {
   box.append(h('h4', { text: t('fr_list_h') }));
   if (!acc.length) { box.append(h('p', { class: 'rc-empty', text: t('fr_empty') })); return; }
   acc.forEach((x) => {
-    const sub = x.shares ? (x.today_cnt ? t('fr_today', { g: fmtG(x.today_g), n: x.today_cnt }) : t('fr_today_none')) : t('fr_private');
+    const sub = x.shares ? (x.today_cnt ? t('fr_today', { p: fmtP(x.today_pm), n: x.today_cnt }) : t('fr_today_none')) : t('fr_private');
     const row = h('button', { class: 'fr-row link-row', type: 'button', disabled: !x.shares }, h('span', { class: 'av sm', text: x.username.charAt(0) }),
       h('span', { class: 'who' }, h('b', { text: x.username }), h('small', { text: sub })), x.shares ? ico('chart') : ico('lock'));
     row.onclick = () => openFriend(x.username);

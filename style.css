@@ -605,3 +605,9 @@ html.reduce .rc-bar{animation:none}
 .when-box input:focus{outline:0;border-color:var(--accent)}
 .when-quick .chip-opt{min-height:36px;padding:var(--s1) var(--s3);font-size:.85rem}
 .sel-sum small.when-line{color:var(--volt);font-weight:700}
+
+/* Limit-Linie im Rückblick */
+.rc-bars{position:relative}
+.rc-limit{position:absolute;left:0;right:0;bottom:calc(var(--lim)*(100% - 22px) + 22px);border-top:2px dashed color-mix(in srgb,var(--danger) 70%,transparent);pointer-events:none;z-index:1}
+.rc-limit span{position:absolute;right:0;top:-18px;font-size:.65rem;font-weight:700;color:var(--danger);font-style:normal}
+.rc-legend .lg.line{width:14px;height:0;border-top:2px dashed var(--danger);border-radius:0;background:none;margin-left:var(--s2)}
