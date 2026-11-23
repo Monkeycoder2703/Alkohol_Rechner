@@ -48,3 +48,6 @@ Gewicht, Rechenfaktor und Limit (0,2 bis 1,0 ‰, Standard 0,5) stehen in `alc_p
 
 ## Konto
 Der Alkohol Rechner nutzt das Supabase-Projekt des Koffein Rechners: ein Konto, ein Benutzername für beide Apps. Alle Alkohol-Daten liegen in eigenen Tabellen mit Präfix `alc_`; an den Koffein-Tabellen wird nichts geändert. Konto löschen löscht in beiden Apps.
+
+## Profil, Rückblick und Freunde
+Der Reiter „Profil“ zeigt den Rückblick (7 oder 30 Tage, Tag von 6 bis 6 Uhr): Alkohol in Gramm, Anzahl Getränke, alkoholfreie Tage, Tage über dem eigenen Limit, Balken je Tag (rot = über dem Limit), Lieblingsgetränke und die letzten Getränke. Datenbank: `alc_recap(p_username, p_days)`. Freundschaften sind die gemeinsame Tabelle `friendships` des Koffein Rechners (Anfragen über `friend_request`, `friend_respond`, `friend_remove`); die Liste kommt aus `alc_friends()` mit den Gramm von heute. Freunde sehen den Rückblick nur, wenn „Freunde sehen meinen Rückblick“ an ist (`alc_profiles.share_recap`, Standard an, Schalter `alc_set_share`). Fremde bekommen nie etwas zu sehen. Freunde in der Rangliste antippen öffnet ihren Rückblick.

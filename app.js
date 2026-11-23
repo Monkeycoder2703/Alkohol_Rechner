@@ -13,8 +13,11 @@ const TXT = { // Supabase-Meldungen -> eigene Texte (nichts Internes anzeigen)
   'Invalid login credentials': 'e_login', 'Email not confirmed': 'e_confirm', 'Database error saving new user': 'e_signup',
   'Auth session missing!': 'e_session', 'New password should be different from the old password.': 'e_samepw'
 };
+const CODES = { // eigene Fehlercodes aus den Datenbank-Funktionen
+  user_not_found: 'e_user_nf', self: 'e_self', already_friends: 'e_af', already_sent: 'e_as', too_many: 'e_tm', forbidden: 'e_forbidden', private: 'e_private', not_found: 'e_nf'
+};
 function ok(res) {
-  if (res.error) { const m = res.error.message || ''; throw new Error(t(TXT[m] || (/rate limit|too many/i.test(m) ? 'e_rate' : 'e_generic'))); }
+  if (res.error) { const m = res.error.message || ''; throw new Error(t(TXT[m] || CODES[m] || (/rate limit/i.test(m) ? 'e_rate' : 'e_generic'))); }
   return res.data;
 }
 async function fn(name, body) { // Edge Function aufrufen
@@ -163,7 +166,7 @@ function select(nav, btn) { nav.querySelectorAll('[role="tab"]').forEach((x) => 
 document.querySelectorAll('#main-tabs [role="tab"]').forEach((b) => b.onclick = () => {
   select($('main-tabs'), b); state.tab = b.dataset.tab;
   document.querySelectorAll('.tab').forEach((x) => x.hidden = x.id !== 'tab-' + b.dataset.tab);
-  moveAll(); if (b.dataset.tab === 'board') loadBoard();
+  moveAll(); if (b.dataset.tab === 'board') loadBoard(); if (b.dataset.tab === 'account') loadProfile();
   if (b.dataset.tab === 'toasts') { renderToasts(); if (!tst.last) randomToast(); }
 });
 document.querySelectorAll('#seg [role="tab"]').forEach((b) => b.onclick = () => { state.period = b.dataset.p; select($('seg'), b); loadBoard(); });
@@ -179,7 +182,7 @@ function applyAuthMode() {
 function rerender() {
   applyAuthMode(); applyStatic();
   document.querySelectorAll('[data-toggle-pw]').forEach((b) => { const shown = $(b.dataset.togglePw).type === 'text'; b.setAttribute('aria-label', t(shown ? 'hide_pw' : 'show_pw')); });
-  if (state.loggedIn) { renderBody(); renderKinds(); renderDrinks(); renderDash(); if (state.tab === 'board' && state.rows) renderBoard(state.rows); if (state.tab === 'toasts') { renderToasts(); randomToast(); } requestAnimationFrame(moveAll); }
+  if (state.loggedIn) { renderBody(); renderKinds(); renderDrinks(); renderDash(); if (state.tab === 'board' && state.rows) renderBoard(state.rows); if (state.tab === 'account') { loadMyRecap(); renderFriends(); } if (state.tab === 'toasts') { renderToasts(); randomToast(); } requestAnimationFrame(moveAll); }
 }
 $('lang').onclick = () => { LANG = LANG === 'de' ? 'en' : 'de'; try { localStorage.setItem('ar-lang', LANG); } catch {} rerender(); };
 
@@ -692,8 +695,132 @@ document.querySelectorAll('#tseg [role="tab"]').forEach((b) => b.onclick = () =>
 $('tc-next').onclick = randomToast;
 $('tc-copy').onclick = () => { if (tst.last) copyText(tst.last); };
 
+/* ---------- Profil: Rückblick und Freunde ----------
+   Freundschaften teilt sich der Alkohol Rechner mit dem Koffein Rechner (Tabelle friendships).
+   Freunde sehen den Rückblick nur, solange "Freunde sehen meinen Rückblick" an ist. */
+const prof = { n: 7, friends: [], busy: false, friend: null };
+const dayDate = (d) => new Date(d + 'T12:00:00');
+function recapStats(days) {
+  const g = days.reduce((s, x) => s + Number(x.g), 0), n = days.reduce((s, x) => s + x.n, 0);
+  return { g, n, free: days.filter((x) => x.n === 0).length, over: days.filter((x) => x.over).length };
+}
+// Rückblick zeichnen: Kennzahlen, Balken je Tag, Lieblingsgetränke, letzte Getränke
+function renderRecap(box, r, n) {
+  box.replaceChildren();
+  const st = recapStats(r.days), max = Math.max(1, ...r.days.map((x) => Number(x.g)));
+  const tile = (v, label, cls) => h('div', { class: 'rc-tile' + (cls ? ' ' + cls : '') }, h('b', { text: v }), h('small', { text: label }));
+  box.append(h('div', { class: 'rc-tiles' },
+    tile(fmtG(st.g) + ' g', t('rc_total')), tile(String(st.n), t(st.n === 1 ? 'rc_drink' : 'rc_drinks')),
+    tile(String(st.free), t('rc_free'), 'good'), tile(String(st.over), t('rc_over'), st.over ? 'bad' : '')));
+  const bars = h('div', { class: 'rc-bars', role: 'img', 'aria-label': t('rc_chart_aria', { n }) });
+  bars.style.setProperty('--n', r.days.length);
+  r.days.forEach((x, i) => {
+    const dt = dayDate(x.d), label = dt.toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'numeric' });
+    const bar = h('div', { class: 'rc-bar' + (x.over ? ' over' : '') + (x.n ? '' : ' zero'), title: `${label}: ${fmtG(x.g)} g · ${x.n} ${t(x.n === 1 ? 'rc_drink' : 'rc_drinks')}` });
+    bar.style.setProperty('--h', (Number(x.g) / max).toFixed(3)); bar.style.setProperty('--i', i);
+    const showLabel = r.days.length <= 7 || i % 5 === 0 || i === r.days.length - 1;
+    bars.append(h('div', { class: 'rc-col' }, bar, h('small', { text: showLabel ? (r.days.length <= 7 ? dt.toLocaleDateString(locale(), { weekday: 'short' }) : String(dt.getDate())) : '' })));
+  });
+  box.append(bars, h('p', { class: 'rc-legend' }, h('i', { class: 'lg ok' }), t('rc_lg_ok'), h('i', { class: 'lg over' }), t('rc_lg_over')));
+  if (!st.n) { box.append(h('p', { class: 'rc-empty', text: t(r.rel === 'self' ? 'rc_empty_me' : 'rc_empty_fr', { n }) })); return; }
+  const top = h('ol', { class: 'rc-top' });
+  r.top.forEach((x) => top.append(h('li', {}, h('span', { class: 'nm', text: drinkName(x.name) }), h('small', { text: `${x.n}× · ${fmtG(x.g)} g` }))));
+  const rec = h('ul', { class: 'rc-recent' });
+  r.recent.forEach((x) => {
+    const dt = new Date(x.ts), when = `${dt.toLocaleDateString(locale(), { weekday: 'short' })} ${dt.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })}`;
+    rec.append(h('li', {}, h('span', { class: 'time', text: when }),
+      h('span', { class: 'nm' }, x.mixer ? `${drinkName(x.name)} + ${mixName(x.mixer)}` : drinkName(x.name), h('small', { class: 'amt', text: x.mixer ? ` · ${x.amount} + ${x.mixer_amount} ml` : ` · ${x.amount} ml` })),
+      h('span', { class: 'mg', text: fmtG(x.g) + ' g' })));
+  });
+  box.append(h('h4', { text: t('rc_top') }), top, h('h4', { text: t('rc_recent') }), rec);
+}
+async function loadMyRecap() {
+  const box = $('rc-me'); box.classList.add('is-loading');
+  try { const r = ok(await sb.rpc('alc_recap', { p_username: state.username, p_days: prof.n })); renderRecap(box, r, prof.n); $('share-on').checked = !!r.shares; }
+  catch (err) { box.replaceChildren(h('p', { class: 'msg err', text: err.message })); }
+  finally { box.classList.remove('is-loading'); }
+}
+function renderMe() {
+  $('me-av').textContent = (state.username || '?').charAt(0); $('me-name').textContent = state.username;
+}
+document.querySelectorAll('#rc-seg [role="tab"]').forEach((b) => b.onclick = () => { prof.n = Number(b.dataset.n); select($('rc-seg'), b); loadMyRecap(); });
+$('share-on').onchange = async (e) => {
+  const on = e.target.checked;
+  try { ok(await sb.rpc('alc_set_share', { p_on: on })); toast(t(on ? 'share_on_ok' : 'share_off_ok')); }
+  catch (err) { e.target.checked = !on; toast(err.message, 'err'); }
+};
+// Freunde
+async function loadFriends() {
+  try { prof.friends = ok(await sb.rpc('alc_friends')); } catch (err) { $('fr-list').replaceChildren(h('p', { class: 'msg err', text: err.message })); return; }
+  renderFriends();
+}
+function frBtn(cls, icon, label, job) {
+  const b = h('button', { class: 'btn small ' + cls, type: 'button' }, ico(icon), h('span', { text: label }));
+  b.onclick = (e) => { e.stopPropagation(); busy(b, async () => { try { await job(); await loadFriends(); } catch (err) { toast(err.message, 'err'); } }); };
+  return b;
+}
+function renderFriends() {
+  const box = $('fr-list'); box.replaceChildren();
+  const F = prof.friends, inc = F.filter((x) => x.status === 'pending' && x.incoming), out = F.filter((x) => x.status === 'pending' && !x.incoming), acc = F.filter((x) => x.status === 'accepted');
+  $('fr-badge').hidden = !inc.length; $('fr-badge').textContent = String(inc.length);
+  if (inc.length || out.length) {
+    box.append(h('h4', { text: t('fr_req_h') }));
+    inc.forEach((x) => box.append(h('div', { class: 'fr-row' }, h('span', { class: 'av sm', text: x.username.charAt(0) }),
+      h('span', { class: 'who' }, h('b', { text: x.username }), h('small', { text: t('fr_incoming') })),
+      h('span', { class: 'fr-btns' }, frBtn('', 'check', t('fr_accept'), async () => { ok(await sb.rpc('friend_respond', { p_id: x.id, p_accept: true })); toast(t('fr_now_friends')); }),
+        frBtn('ghost', 'x', t('fr_decline'), async () => ok(await sb.rpc('friend_respond', { p_id: x.id, p_accept: false })))))));
+    out.forEach((x) => box.append(h('div', { class: 'fr-row' }, h('span', { class: 'av sm', text: x.username.charAt(0) }),
+      h('span', { class: 'who' }, h('b', { text: x.username }), h('small', { text: t('fr_outgoing') })),
+      h('span', { class: 'fr-btns' }, frBtn('ghost', 'x', t('fr_withdraw'), async () => ok(await sb.rpc('friend_remove', { p_id: x.id })))))));
+  }
+  box.append(h('h4', { text: t('fr_list_h') }));
+  if (!acc.length) { box.append(h('p', { class: 'rc-empty', text: t('fr_empty') })); return; }
+  acc.forEach((x) => {
+    const sub = x.shares ? (x.today_cnt ? t('fr_today', { g: fmtG(x.today_g), n: x.today_cnt }) : t('fr_today_none')) : t('fr_private');
+    const row = h('button', { class: 'fr-row link-row', type: 'button', disabled: !x.shares }, h('span', { class: 'av sm', text: x.username.charAt(0) }),
+      h('span', { class: 'who' }, h('b', { text: x.username }), h('small', { text: sub })), x.shares ? ico('chart') : ico('lock'));
+    row.onclick = () => openFriend(x.username);
+    box.append(row);
+  });
+}
+$('fr-form').onsubmit = async (e) => {
+  e.preventDefault(); msg('fr-msg');
+  const name = $('fr-name').value.trim(); if (!name) { msg('fr-msg', t('e_user_nf')); return; }
+  await busy(e.target.querySelector('button[type=submit]'), async () => {
+    try { const r = ok(await sb.rpc('friend_request', { p_username: name })); $('fr-name').value = ''; msg('fr-msg', t(r === 'accepted' ? 'fr_now_friends' : 'fr_sent'), true); await loadFriends(); }
+    catch (err) { msg('fr-msg', err.message); }
+  });
+};
+// Profil eines Freundes mit seinem Rückblick
+async function openFriend(name) {
+  const dlg = $('fr-dialog'); prof.friend = name;
+  $('fd-av').textContent = name.charAt(0); $('fd-name').textContent = name; $('fd-since').textContent = ''; $('rc-friend').replaceChildren(h('div', { class: 'sk-row' }), h('div', { class: 'sk-row' }));
+  $('fd-remove').hidden = true; $('fd-remove').dataset.sure = '';
+  if (!dlg.open) dlg.showModal();
+  try {
+    const r = ok(await sb.rpc('alc_recap', { p_username: name, p_days: prof.fn || 7 }));
+    if (prof.friend !== name) return;
+    $('fd-since').textContent = t('prof_since', { d: new Date(r.since).toLocaleDateString(locale(), { month: 'long', year: 'numeric' }) });
+    renderRecap($('rc-friend'), r, prof.fn || 7);
+    $('fd-remove').hidden = false; $('fd-remove').dataset.id = r.friendship_id;
+  } catch (err) { $('rc-friend').replaceChildren(h('p', { class: 'msg err', text: err.message })); }
+}
+document.querySelectorAll('#fd-seg [role="tab"]').forEach((b) => b.onclick = () => { prof.fn = Number(b.dataset.n); select($('fd-seg'), b); if (prof.friend) openFriend(prof.friend); });
+$('fd-close').onclick = () => $('fr-dialog').close();
+$('fd-remove').onclick = async (e) => {
+  const b = e.currentTarget;
+  if (!b.dataset.sure) { b.dataset.sure = '1'; b.querySelector('span').textContent = t('fr_remove_sure'); return; } // zweiter Tipp bestätigt
+  await busy(b, async () => {
+    try { ok(await sb.rpc('friend_remove', { p_id: Number(b.dataset.id) })); $('fr-dialog').close(); toast(t('fr_removed')); await loadFriends(); }
+    catch (err) { toast(err.message, 'err'); }
+  });
+};
+$('fr-dialog').addEventListener('close', () => { prof.friend = null; $('fd-remove').querySelector('span').textContent = t('fr_remove'); });
+function loadProfile() { renderMe(); loadMyRecap(); loadFriends(); }
+
 /* ---------- Rangliste: wer hält am besten Maß? Oben steht, wer im eigenen Limit bleibt und am wenigsten trinkt. ---------- */
 async function loadBoard() {
+  if (!prof.friends.length) loadFriends().then(() => { if (state.rows) renderBoard(state.rows); });
   const box = $('board'), token = ++loadBoard.n;
   box.replaceChildren(...[0, 1, 2, 3, 4].map(() => h('div', { class: 'sk-row' })));
   let rows;
@@ -733,6 +860,11 @@ function renderBoard(rows) {
     li.style.setProperty('--i', i); ol.append(li);
   });
   if (rows.length > 3) box.append(ol);
+  // Freunde in der Rangliste antippen öffnet ihren Rückblick
+  box.querySelectorAll('.pod .nm, .rank .who b').forEach((el) => {
+    const name = el.firstChild && el.firstChild.textContent, f = (prof.friends || []).find((x) => x.username === name && x.status === 'accepted' && x.shares);
+    if (f) { el.classList.add('fr-link'); el.onclick = () => openFriend(name); }
+  });
   box.append(h('p', { class: 'board-note', text: t('board_note') }));
 }
 

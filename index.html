@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-title" content="Alkohol Rechner">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=20261121b">
+<link rel="stylesheet" href="style.css?v=20261123a">
 </head>
 <body class="booting">
 
@@ -157,7 +157,7 @@
     <button role="tab" aria-selected="false" data-tab="board" type="button"><svg class="ico"><use href="#i-trophy"/></svg><span data-i18n="tab_board"></span></button>
     <button role="tab" aria-selected="false" data-tab="toasts" type="button"><svg class="ico"><use href="#i-cheers"/></svg><span data-i18n="tab_toasts"></span></button>
     <button role="tab" aria-selected="false" data-tab="suggest" type="button"><svg class="ico"><use href="#i-bulb"/></svg><span data-i18n="tab_suggest"></span></button>
-    <button role="tab" aria-selected="false" data-tab="account" type="button"><svg class="ico"><use href="#i-user"/></svg><span data-i18n="tab_account"></span></button>
+    <button role="tab" aria-selected="false" data-tab="account" type="button"><i class="badge-n" id="fr-badge" hidden></i><svg class="ico"><use href="#i-user"/></svg><span data-i18n="tab_account"></span></button>
   </nav>
 
   <section id="tab-dash" class="tab">
@@ -258,6 +258,24 @@
   </section>
 
   <section id="tab-account" class="tab narrow" hidden>
+    <div class="panel prof-card">
+      <div class="prof-head"><span class="av" id="me-av"></span><div><h2 id="me-name"></h2><p class="sub" data-i18n="rc_sub"></p></div></div>
+      <div class="sec-h"><h3 data-i18n="rc_title"></h3>
+        <div class="tabs seg rc-seg" id="rc-seg" role="tablist" data-i18n-aria="rc_title"><span class="tab-ind" aria-hidden="true"></span>
+          <button role="tab" aria-selected="true" data-n="7" type="button" data-i18n="rc_7"></button><button role="tab" aria-selected="false" data-n="30" type="button" data-i18n="rc_30"></button></div></div>
+      <div id="rc-me" class="recap"></div>
+      <label class="check share"><input type="checkbox" id="share-on" checked><span><b data-i18n="share_label"></b><br><span data-i18n="share_hint"></span></span></label>
+    </div>
+    <div class="panel fr-card">
+      <h3 data-i18n="fr_title"></h3>
+      <p class="sub" data-i18n="fr_sub"></p>
+      <form id="fr-form" class="fr-add" novalidate>
+        <input id="fr-name" type="text" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false" data-i18n-ph="fr_name_ph" data-i18n-aria="fr_name">
+        <button class="btn" type="submit"><svg class="ico"><use href="#i-send"/></svg><span data-i18n="fr_send"></span></button>
+      </form>
+      <p id="fr-msg" class="msg" role="alert"></p>
+      <div id="fr-list"></div>
+    </div>
     <div class="panel">
       <h2 data-i18n="acc_title"></h2>
       <p class="sub"><span data-i18n="acc_as"></span><b id="who2"></b></p>
@@ -327,6 +345,19 @@
   </form>
 </dialog>
 
+<dialog id="fr-dialog" aria-labelledby="fd-name">
+  <div class="fr-dlg">
+    <div class="prof-head"><span class="av" id="fd-av"></span><div><h3 id="fd-name"></h3><p class="sub" id="fd-since"></p></div></div>
+    <div class="tabs seg rc-seg" id="fd-seg" role="tablist" data-i18n-aria="rc_title"><span class="tab-ind" aria-hidden="true"></span>
+      <button role="tab" aria-selected="true" data-n="7" type="button" data-i18n="rc_7"></button><button role="tab" aria-selected="false" data-n="30" type="button" data-i18n="rc_30"></button></div>
+    <div id="rc-friend" class="recap"></div>
+    <div class="row">
+      <button type="button" id="fd-remove" class="btn ghost" hidden><svg class="ico"><use href="#i-x"/></svg><span data-i18n="fr_remove"></span></button>
+      <button type="button" id="fd-close" class="btn"><span data-i18n="lc_close"></span></button>
+    </div>
+  </div>
+</dialog>
+
 <dialog id="lc-dialog" aria-labelledby="lc-dlg-title">
   <div class="lc">
     <p class="lc-step" id="lc-step"></p>
@@ -356,13 +387,13 @@
 <div id="fx" aria-hidden="true"></div>
 
 <script src="supabase.js"></script>
-<script src="config.js?v=20261121b"></script>
-<script src="i18n.js?v=20261121b"></script>
-<script src="toasts.js?v=20261121b"></script>
-<script src="liquid.js?v=20261121b"></script>
-<script src="glasses.js?v=20261121b"></script>
-<script src="ui.js?v=20261121b"></script>
-<script src="pwa.js?v=20261121b"></script>
-<script src="app.js?v=20261121b"></script>
+<script src="config.js?v=20261123a"></script>
+<script src="i18n.js?v=20261123a"></script>
+<script src="toasts.js?v=20261123a"></script>
+<script src="liquid.js?v=20261123a"></script>
+<script src="glasses.js?v=20261123a"></script>
+<script src="ui.js?v=20261123a"></script>
+<script src="pwa.js?v=20261123a"></script>
+<script src="app.js?v=20261123a"></script>
 </body>
 </html>
