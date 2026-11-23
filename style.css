@@ -619,3 +619,11 @@ html.reduce .rc-bar{animation:none}
 .when-hint{color:var(--mute);font-size:.82rem}
 .late-box{margin-top:var(--s5)}
 .late-when{display:grid;line-height:1.15}.late-when small{color:var(--mute)}
+/* Handy: keine Markierung beim Antippen (Tipp-Highlight des Browsers und Fokus-Rahmen nach dem Tippen).
+   Mit Tastatur bleibt der Fokus-Rahmen sichtbar. */
+html{-webkit-tap-highlight-color:transparent}
+*{-webkit-tap-highlight-color:transparent}
+@media (hover:none) and (pointer:coarse){
+  :focus,:focus-visible{outline:none!important}
+  button:focus,a:focus,[role="tab"]:focus,[role="radio"]:focus,label:focus-within{box-shadow:none}
+}
