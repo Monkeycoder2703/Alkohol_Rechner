@@ -17,7 +17,7 @@
 <meta name="apple-mobile-web-app-title" content="Alkohol Rechner">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css?v=20261123a">
+<link rel="stylesheet" href="style.css?v=20261123b">
 </head>
 <body class="booting">
 
@@ -198,6 +198,14 @@
           <div class="sec-h"><h3 data-i18n="ratio_h"></h3><small id="ratio-usual"></small></div>
           <div class="chips" id="ratio-grid" role="radiogroup" data-i18n-aria="ratio_h"></div>
           <p class="mix-how" id="mix-how"></p>
+        </div>
+        <div class="when-row">
+          <button id="when-toggle" class="chip-opt" type="button" aria-expanded="false" aria-controls="when-box"><svg class="ico"><use href="#i-clock"/></svg><span id="when-t"></span></button>
+          <div id="when-box" class="when-box" hidden>
+            <label for="when" data-i18n="when_label"></label>
+            <input id="when" type="datetime-local" step="300">
+            <div class="chips when-quick" id="when-quick"></div>
+          </div>
         </div>
         <div class="addbar">
           <p class="sel-sum" id="preview" aria-live="polite"></p>
@@ -387,13 +395,13 @@
 <div id="fx" aria-hidden="true"></div>
 
 <script src="supabase.js"></script>
-<script src="config.js?v=20261123a"></script>
-<script src="i18n.js?v=20261123a"></script>
-<script src="toasts.js?v=20261123a"></script>
-<script src="liquid.js?v=20261123a"></script>
-<script src="glasses.js?v=20261123a"></script>
-<script src="ui.js?v=20261123a"></script>
-<script src="pwa.js?v=20261123a"></script>
-<script src="app.js?v=20261123a"></script>
+<script src="config.js?v=20261123b"></script>
+<script src="i18n.js?v=20261123b"></script>
+<script src="toasts.js?v=20261123b"></script>
+<script src="liquid.js?v=20261123b"></script>
+<script src="glasses.js?v=20261123b"></script>
+<script src="ui.js?v=20261123b"></script>
+<script src="pwa.js?v=20261123b"></script>
+<script src="app.js?v=20261123b"></script>
 </body>
 </html>

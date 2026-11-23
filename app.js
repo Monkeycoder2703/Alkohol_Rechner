@@ -14,7 +14,7 @@ const TXT = { // Supabase-Meldungen -> eigene Texte (nichts Internes anzeigen)
   'Auth session missing!': 'e_session', 'New password should be different from the old password.': 'e_samepw'
 };
 const CODES = { // eigene Fehlercodes aus den Datenbank-Funktionen
-  user_not_found: 'e_user_nf', self: 'e_self', already_friends: 'e_af', already_sent: 'e_as', too_many: 'e_tm', forbidden: 'e_forbidden', private: 'e_private', not_found: 'e_nf'
+  user_not_found: 'e_user_nf', self: 'e_self', already_friends: 'e_af', already_sent: 'e_as', too_many: 'e_tm', forbidden: 'e_forbidden', private: 'e_private', not_found: 'e_nf', future: 'e_future', too_old: 'e_too_old'
 };
 function ok(res) {
   if (res.error) { const m = res.error.message || ''; throw new Error(t(TXT[m] || CODES[m] || (/rate limit/i.test(m) ? 'e_rate' : 'e_generic'))); }
@@ -182,6 +182,7 @@ function applyAuthMode() {
 function rerender() {
   applyAuthMode(); applyStatic();
   document.querySelectorAll('[data-toggle-pw]').forEach((b) => { const shown = $(b.dataset.togglePw).type === 'text'; b.setAttribute('aria-label', t(shown ? 'hide_pw' : 'show_pw')); });
+  renderWhen();
   if (state.loggedIn) { renderBody(); renderKinds(); renderDrinks(); renderDash(); if (state.tab === 'board' && state.rows) renderBoard(state.rows); if (state.tab === 'account') { loadMyRecap(); renderFriends(); } if (state.tab === 'toasts') { renderToasts(); randomToast(); } requestAnimationFrame(moveAll); }
 }
 $('lang').onclick = () => { LANG = LANG === 'de' ? 'en' : 'de'; try { localStorage.setItem('ar-lang', LANG); } catch {} rerender(); };
@@ -369,6 +370,38 @@ $('lc-apply').onclick = async () => {
   });
 };
 
+/* ---------- Nachtragen: Getränk mit einer Uhrzeit in der Vergangenheit eintragen (bis 7 Tage zurück) ---------- */
+const when = { on: false };
+const pad = (n) => String(n).padStart(2, '0');
+const toLocalInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtWhen = (d) => d.toLocaleString(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+function whenDate() { const v = $('when').value; const d = v ? new Date(v) : null; return d && !isNaN(d) ? d : null; }
+// Gültig: nicht in der Zukunft, höchstens 7 Tage zurück
+function whenError(d) {
+  if (!d) return t('e_when');
+  if (d.getTime() > Date.now() + 5 * 60e3) return t('e_future');
+  if (d.getTime() < Date.now() - 7 * 864e5 + 60e3) return t('e_too_old');
+  return '';
+}
+function setWhenBounds() {
+  const now = new Date(); $('when').max = toLocalInput(now); $('when').min = toLocalInput(new Date(now - 7 * 864e5 + 5 * 60e3));
+}
+function renderWhen() {
+  $('when-toggle').setAttribute('aria-expanded', String(when.on)); $('when-toggle').classList.toggle('on', when.on);
+  $('when-t').textContent = t(when.on ? 'when_now' : 'when_backfill'); $('when-box').hidden = !when.on;
+  const q = $('when-quick'); q.replaceChildren();
+  // Schnellwahl: vor 1 Stunde, gestern Abend (21 Uhr), vorgestern Abend
+  const now = new Date(), opts = [[t('when_1h'), new Date(now - 3600e3)], [t('when_yday'), new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 21, 0)], [t('when_2day'), new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 21, 0)]];
+  opts.forEach(([label, d]) => { const b = h('button', { class: 'chip-opt', type: 'button', text: label }); b.onclick = () => { $('when').value = toLocalInput(d); renderSelection(); }; q.append(b); });
+}
+$('when-toggle').onclick = () => {
+  when.on = !when.on;
+  if (when.on) { setWhenBounds(); if (!$('when').value) { const d = new Date(Date.now() - 3600e3); d.setMinutes(Math.floor(d.getMinutes() / 5) * 5); $('when').value = toLocalInput(d); } }
+  renderWhen(); renderSelection(); if (when.on) $('when').focus();
+};
+$('when').oninput = () => renderSelection();
+renderWhen();
+
 /* ---------- Dashboard: Getränk, Menge, Mixer ---------- */
 const sel = () => state.drinks.find((x) => x.id === state.selected);
 const mixer = () => (state.mixer == null ? null : state.mixers.find((x) => x.id === state.mixer) || null);
@@ -535,10 +568,12 @@ function renderSelection() {
     sum.append(h('b', { text: m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name) }), h('small', { text: parts.join(' · ') }));
     const caf = cafFor(d, alc, m, s ? s.mix : 0); // Koffein aus dem Getränk und aus der Mixer-Menge des Glases
     if (caf > 0) sum.append(h('small', { class: 'caf', text: t('sum_caf', { mg: caf }) }));
+    const wd = when.on ? whenDate() : null, we = when.on ? whenError(wd) : '';
+    if (when.on) sum.append(h('small', { class: we ? 'warnline' : 'when-line', text: we || t('when_line', { w: fmtWhen(wd) }) }));
     if (!hasBody()) sum.append(h('small', { class: 'need', text: t('need_body') }));
-    else if (bacNow(state.recent || [], Date.now(), ELIM) + add > limit() + EPS) sum.append(h('small', { class: 'warnline', text: t('sum_over') }));
+    else if (!when.on && bacNow(state.recent || [], Date.now(), ELIM) + add > limit() + EPS) sum.append(h('small', { class: 'warnline', text: t('sum_over') }));
   }
-  $('add').disabled = !okAmt || !hasBody();
+  $('add').disabled = !okAmt || !hasBody() || (when.on && !!whenError(whenDate()));
 }
 async function refresh(newest) {
   const since = new Date(Date.now() - 48 * 3600e3).toISOString(); // der Abend von gestern zählt noch mit
@@ -626,14 +661,16 @@ $('add').onclick = async () => {
   const d = sel(), m = mixer(); if (!d || !state.amount || !hasBody()) return;
   // mit Mixer: gewählte Größe = ganzes Glas, aufgeteilt nach dem Mischverhältnis
   const s = m ? split(state.amount, d, m) : { alc: state.amount, mix: null }; if (s.alc < 1) return;
+  const past = when.on ? whenDate() : null; if (when.on && whenError(past)) return; // nachtragen: Uhrzeit mitschicken
   const btn = $('add'), amount = s.alc, g = gramsFor(d, amount); btn.disabled = true;
   try {
-    const id = ok(await sb.rpc('alc_add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? s.mix : null }));
+    const id = ok(await sb.rpc('alc_add_intake', { p_drink_id: Number(d.id), p_amount: amount, p_mixer_id: m ? Number(m.id) : null, p_mixer_amount: m ? s.mix : null, p_ts: past ? past.toISOString() : null }));
     await playLoader(glassFor(d.name, d.kind, amount, m ? m.name : null, m ? s.mix : null));
     await refresh(id);
     const r = $('cup').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * .35, `+${fmtG(g)} g`);
     const caf = cafFor(d, amount, m, s.mix), nm = m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name);
-    toast(caf > 0 ? t('added_caf', { name: nm, mg: caf }) : t('added', { name: nm }));
+    if (past) { toast(t('added_past', { name: nm, w: fmtWhen(past) })); when.on = false; renderWhen(); }
+    else toast(caf > 0 ? t('added_caf', { name: nm, mg: caf }) : t('added', { name: nm }));
   } catch (err) { $('loader').classList.remove('on'); toast(err.message, 'err'); }
   finally { renderSelection(); }
 };

@@ -594,3 +594,14 @@ html.reduce .rc-bar{animation:none}
 .fr-row{flex-wrap:wrap}
 .fr-row .who b{overflow-wrap:normal;word-break:normal}
 .fr-row .fr-btns{flex:1 1 100%;justify-content:flex-start;padding-left:calc(40px + var(--s3))}
+
+/* Nachtragen */
+.when-row{display:grid;gap:var(--s2);margin:var(--s4) 0 var(--s2)}
+#when-toggle{justify-self:start}
+#when-toggle.on{border-color:var(--volt);color:var(--volt)}
+.when-box{display:grid;gap:var(--s2);padding:var(--s3);border:1px solid var(--line);border-radius:var(--r);background:color-mix(in srgb,var(--surface) 70%,transparent)}
+.when-box label{font-weight:700;font-size:.9rem}
+.when-box input{min-height:48px;padding:0 var(--s3);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--r);color:var(--ink);font:inherit;color-scheme:dark}
+.when-box input:focus{outline:0;border-color:var(--accent)}
+.when-quick .chip-opt{min-height:36px;padding:var(--s1) var(--s3);font-size:.85rem}
+.sel-sum small.when-line{color:var(--volt);font-weight:700}
