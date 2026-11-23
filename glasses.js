@@ -60,6 +60,7 @@ const GLASS_OF = (() => {
   put('tumbler', 'Whisky,Bourbon,Cognac,Weinbrand,Mojito,Caipirinha,Old Fashioned,Whisky Sour,Negroni,Bowle');
   put('longdrink', 'Gin Tonic,Cuba Libre,Moscow Mule,Piña Colada,Sex on the Beach,Tequila Sunrise,Swimming Pool,Long Island Iced Tea,Zombie,Mai Tai,Bloody Mary,Hard Seltzer,Alkopop,Longdrink aus der Dose');
   put('cocktail', 'Martini,Espresso Martini,Margarita,Cosmopolitan');
+  put('tumbler', "Asbach Uralt,Mariacron,Chantré,Wilthener Goldkrone,Metaxa 5 Sterne,Jack Daniel's,Jim Beam,Baileys"); // pur im Tumbler, mit Mixer im Longdrinkglas
   return m;
 })();
 const SPARKLE = /bier|pils|helles|export|weizen|kölsch|alt|lager|ale|ipa|stout|radler|sekt|prosecco|champagner|cider|seltzer|spritz|hugo|mimosa|bellini|lambrusco|alkopop/i;

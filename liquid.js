@@ -15,6 +15,10 @@ const DRINK_RGB = (() => {
   put([79, 214, 160], 'Pfefferminzlikör'); put([155, 227, 107], 'Absinth,Saurer Apfel,Mojito,Caipirinha,Margarita'); put([241, 223, 184], 'Sahnelikör,Kokoslikör,Piña Colada,Moscow Mule');
   put([246, 208, 77], 'Eierlikör,Limoncello,Limoncello Spritz,Mimosa'); put(ORANGE, 'Orangenlikör,Aperitif-Bitter,Aperol Spritz,Tequila Sunrise,Sex on the Beach,Zombie,Pfirsichlikör');
   put([209, 31, 58], 'Bitterlikör,Negroni,Bloody Mary'); put([224, 90, 138], 'Feigenlikör,Cosmopolitan,Wild Berry Spritz'); put([92, 200, 240], 'Alkopop,Swimming Pool');
+  // Marken zum Selbermischen
+  put(BROWN, "Asbach Uralt,Mariacron,Chantré,Wilthener Goldkrone,Metaxa 5 Sterne,Bacardi Spiced,Captain Morgan Spiced Gold,Captain Morgan Dark Rum,Jack Daniel's,Jim Beam");
+  put(CLEAR, "Bacardi Carta Blanca,Malibu,Pitú,Wodka Gorbatschow,Smirnoff,Eristoff,Puschkin,Three Sixty,Gordon's Gin");
+  put(DARK, 'Jägermeister,Fernet Branca'); put([224, 90, 138], 'Bacardi Razz'); put([241, 223, 184], 'Baileys'); put([230, 60, 60], 'Passoa');
   return m;
 })();
 const MIXER_RGB = (() => {

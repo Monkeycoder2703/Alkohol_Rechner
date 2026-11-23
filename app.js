@@ -493,6 +493,8 @@ const MIX_SIZE_STD = { spirit: 200, beer: 500, wine: 250, mixed: 300 };
 const MIX_KNOWN = { // Getränk|Mixer -> übliches Verhältnis
   'gin|tonic water': '1:3', 'gin|bitter lemon': '1:3', 'rum|cola': '1:3', 'rum|cola zero': '1:3', 'whisky|cola': '1:3', 'whisky|cola zero': '1:3', 'bourbon|cola': '1:3',
   'bourbon|ginger ale': '1:3', 'whisky|ginger ale': '1:3', 'vodka|ginger beer': '1:3', 'vodka|orangensaft': '1:3', 'vodka|cranberrysaft': '1:3', 'tequila|orangensaft': '1:3',
+  'asbach uralt|cola': '1:3', 'mariacron|cola': '1:3', 'chantré|cola': '1:3', 'bacardi carta blanca|cola': '1:3', 'bacardi spiced|cola': '1:3', 'captain morgan spiced gold|cola': '1:3',
+  "jack daniel's|cola": '1:3', 'jim beam|cola': '1:3', "gordon's gin|tonic water": '1:3', 'wodka gorbatschow|orangensaft': '1:3', 'smirnoff|orangensaft': '1:3',
   'weißwein|sprudelwasser': '1:1', 'rotwein|cola': '1:1', 'sekt|orangensaft': '1:1', 'prosecco|orangensaft': '1:1', 'pils|zitronenlimo': '1:1', 'helles|zitronenlimo': '1:1', 'weizenbier|zitronenlimo': '1:1'
 };
 const mixStd = (d, m) => MIX_KNOWN[`${d.name}|${m.name}`.toLowerCase()] || (d.kind === 'spirit' && Number(d.abv) < 25 ? '1:3' : ({ spirit: '1:4', beer: '1:1', wine: '1:1', mixed: '1:1' })[d.kind] || '1:1');
