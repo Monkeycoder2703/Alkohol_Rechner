@@ -370,12 +370,19 @@ $('lc-apply').onclick = async () => {
   });
 };
 
-/* ---------- Nachtragen: Getränk mit einer Uhrzeit in der Vergangenheit eintragen (bis 7 Tage zurück) ---------- */
+/* ---------- Nachtragen: Abend wählen, dann die Uhrzeit (bis 7 Tage zurück) ----------
+   Ein Abend geht wie überall in der App von 6 bis 6 Uhr: "Samstag, 02:30" heißt also Sonntag früh um 02:30 und zählt zum Samstagabend. */
 const when = { on: false };
 const pad = (n) => String(n).padStart(2, '0');
-const toLocalInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-const fmtWhen = (d) => d.toLocaleString(locale(), { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
-function whenDate() { const v = $('when').value; const d = v ? new Date(v) : null; return d && !isNaN(d) ? d : null; }
+const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const eveningOf = (d) => new Date(new Date(d).getTime() - 6 * 3600e3); // zu welchem Abend ein Zeitpunkt gehört
+const fmtDay = (d) => d.toLocaleDateString(locale(), { weekday: 'short', day: 'numeric', month: 'numeric' });
+const fmtTime = (d) => d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+function whenDate() {
+  const day = $('when-day').value, tm = $('when-time').value; if (!day || !/^\d{2}:\d{2}$/.test(tm)) return null;
+  const [y, m, d] = day.split('-').map(Number), [hh, mm] = tm.split(':').map(Number);
+  return new Date(y, m - 1, d + (hh < 6 ? 1 : 0), hh, mm); // vor 6 Uhr: schon der nächste Kalendertag, aber derselbe Abend
+}
 // Gültig: nicht in der Zukunft, höchstens 7 Tage zurück
 function whenError(d) {
   if (!d) return t('e_when');
@@ -383,23 +390,21 @@ function whenError(d) {
   if (d.getTime() < Date.now() - 7 * 864e5 + 60e3) return t('e_too_old');
   return '';
 }
-function setWhenBounds() {
-  const now = new Date(); $('when').max = toLocalInput(now); $('when').min = toLocalInput(new Date(now - 7 * 864e5 + 5 * 60e3));
+function fillDays() {
+  const sel = $('when-day'), keep = sel.value, e0 = eveningOf(Date.now()); sel.replaceChildren();
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(e0.getFullYear(), e0.getMonth(), e0.getDate() - i);
+    sel.append(h('option', { value: ymd(d), text: (i === 0 ? t('when_today') + ' · ' : i === 1 ? t('when_yday') + ' · ' : '') + fmtDay(d) }));
+  }
+  sel.value = keep && [...sel.options].some((o) => o.value === keep) ? keep : sel.options[1].value; // Standard: gestern Abend
 }
 function renderWhen() {
   $('when-toggle').setAttribute('aria-expanded', String(when.on)); $('when-toggle').classList.toggle('on', when.on);
   $('when-t').textContent = t(when.on ? 'when_now' : 'when_backfill'); $('when-box').hidden = !when.on;
-  const q = $('when-quick'); q.replaceChildren();
-  // Schnellwahl: vor 1 Stunde, gestern Abend (21 Uhr), vorgestern Abend
-  const now = new Date(), opts = [[t('when_1h'), new Date(now - 3600e3)], [t('when_yday'), new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 21, 0)], [t('when_2day'), new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2, 21, 0)]];
-  opts.forEach(([label, d]) => { const b = h('button', { class: 'chip-opt', type: 'button', text: label }); b.onclick = () => { $('when').value = toLocalInput(d); renderSelection(); }; q.append(b); });
+  if (when.on) fillDays();
 }
-$('when-toggle').onclick = () => {
-  when.on = !when.on;
-  if (when.on) { setWhenBounds(); if (!$('when').value) { const d = new Date(Date.now() - 3600e3); d.setMinutes(Math.floor(d.getMinutes() / 5) * 5); $('when').value = toLocalInput(d); } }
-  renderWhen(); renderSelection(); if (when.on) $('when').focus();
-};
-$('when').oninput = () => renderSelection();
+$('when-toggle').onclick = () => { when.on = !when.on; renderWhen(); renderSelection(); if (when.on) $('when-day').focus(); };
+$('when-day').onchange = () => renderSelection(); $('when-time').oninput = () => renderSelection();
 renderWhen();
 
 /* ---------- Dashboard: Getränk, Menge, Mixer ---------- */
@@ -571,7 +576,7 @@ function renderSelection() {
     const caf = cafFor(d, alc, m, s ? s.mix : 0); // Koffein aus dem Getränk und aus der Mixer-Menge des Glases
     if (caf > 0) sum.append(h('small', { class: 'caf', text: t('sum_caf', { mg: caf }) }));
     const wd = when.on ? whenDate() : null, we = when.on ? whenError(wd) : '';
-    if (when.on) sum.append(h('small', { class: we ? 'warnline' : 'when-line', text: we || t('when_line', { w: fmtWhen(wd) }) }));
+    if (when.on) sum.append(h('small', { class: we ? 'warnline' : 'when-line', text: we || t('when_line', { d: fmtDay(eveningOf(wd)), time: fmtTime(wd) }) }));
     if (!hasBody()) sum.append(h('small', { class: 'need', text: t('need_body') }));
     else if (!when.on && bacNow(state.recent || [], Date.now(), ELIM) + add > limit() + EPS) sum.append(h('small', { class: 'warnline', text: t('sum_over') }));
   }
@@ -580,6 +585,11 @@ function renderSelection() {
 async function refresh(newest) {
   const since = new Date(Date.now() - 48 * 3600e3).toISOString(); // der Abend von gestern zählt noch mit
   state.recent = ok(await sb.from('alc_intakes').select('id,name,grams,amount,mixer,mixer_amount,ts').gte('ts', since).order('ts', { ascending: false }));
+  // Nachgetragenes der letzten 3 Tage, das zu einem früheren Abend gehört (taucht unter "Heute" nicht auf)
+  try {
+    state.late = ok(await sb.from('alc_intakes').select('id,name,grams,amount,mixer,mixer_amount,ts,created_at')
+      .gte('created_at', new Date(Date.now() - 3 * 864e5).toISOString()).lt('ts', new Date(dayStart()).toISOString()).order('created_at', { ascending: false }).limit(10));
+  } catch { state.late = []; }
   renderDash(newest, true);
 }
 function statusFor(bac, p, any) {
@@ -658,6 +668,23 @@ function renderDash(newest, animate) {
     };
     ul.append(li);
   });
+  renderLate();
+}
+function renderLate() {
+  const items = (state.late || []).filter((i) => new Date(i.created_at) - new Date(i.ts) > 30 * 60e3), box = $('late-box'), ul = $('late-list');
+  box.hidden = !items.length; ul.replaceChildren();
+  items.forEach((i) => {
+    const label = i.mixer ? `${drinkName(i.name)} + ${mixName(i.mixer)}` : drinkName(i.name), ts = new Date(i.ts);
+    const x = h('button', { class: 'icon-btn', type: 'button', 'aria-label': `${label} ${t('remove')}`, title: t('remove') }, ico('x'));
+    const li = h('li', {}, h('span', { class: 'time late-when' }, h('b', { text: fmtDay(eveningOf(ts)) }), h('small', { text: fmtTime(ts) })),
+      h('span', { class: 'nm' }, label, h('small', { class: 'amt', text: i.mixer ? ` · ${i.amount} + ${i.mixer_amount} ml` : ` · ${i.amount} ml` })),
+      h('span', { class: 'mg', text: fmtG(i.grams) + ' g' }), x);
+    x.onclick = async () => {
+      try { ok(await sb.from('alc_intakes').delete().eq('id', i.id)); li.classList.add('leaving'); await sleep(280); await refresh(); toast(t('removed')); }
+      catch (err) { toast(err.message, 'err'); }
+    };
+    ul.append(li);
+  });
 }
 $('add').onclick = async () => {
   const d = sel(), m = mixer(); if (!d || !state.amount || !hasBody()) return;
@@ -671,7 +698,7 @@ $('add').onclick = async () => {
     await refresh(id);
     const r = $('cup').getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height * .35, `+${fmtG(g)} g`);
     const caf = cafFor(d, amount, m, s.mix), nm = m ? `${drinkName(d.name)} + ${mixName(m.name)}` : drinkName(d.name);
-    if (past) { toast(t('added_past', { name: nm, w: fmtWhen(past) })); when.on = false; renderWhen(); }
+    if (past) { toast(t('added_past', { name: nm, d: fmtDay(eveningOf(past)), time: fmtTime(past) })); when.on = false; renderWhen(); }
     else toast(caf > 0 ? t('added_caf', { name: nm, mg: caf }) : t('added', { name: nm }));
   } catch (err) { $('loader').classList.remove('on'); toast(err.message, 'err'); }
   finally { renderSelection(); }
